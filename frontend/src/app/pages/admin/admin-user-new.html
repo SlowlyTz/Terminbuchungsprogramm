@@ -1,0 +1,82 @@
+<a class="back-button" routerLink="../">
+  <span class="back-button__arrow" aria-hidden="true"><i class="pi pi-arrow-left"></i></span>
+  <span>Zurück zur Benutzerliste</span>
+</a>
+
+@if (created(); as u) {
+  <div id="benutzer-angelegt" tabindex="-1">
+    <p-message severity="success" icon="pi pi-check-circle">
+      <div class="confirmed">
+        <strong>Das Benutzerkonto wurde angelegt.</strong>
+        <span>{{ u.firstName }} {{ u.lastName }}, {{ u.email }}, Abteilung {{ u.department }}, Rolle {{ roleLabels[u.role] }}.</span>
+        <span>Eine E-Mail mit dem Erstpasswort wurde an {{ u.email }} gesendet.</span>
+      </div>
+    </p-message>
+    <div class="after">
+      <p-button label="Zur Benutzerliste" icon="pi pi-list" routerLink="../" />
+      <p-button label="Weiteren Benutzer anlegen" icon="pi pi-user-plus" severity="secondary" [outlined]="true" (onClick)="reset()" />
+    </div>
+  </div>
+} @else {
+  <h2>Neuen Benutzer anlegen</h2>
+  <p class="muted">Pflichtfelder sind mit * markiert. Das Erstpasswort wird automatisch erzeugt und per E-Mail verschickt.</p>
+
+  <form class="form" (ngSubmit)="!invalid() && reviewOpen.set(true)">
+    <div class="row">
+      <div class="field">
+        <label for="vorname">Vorname *</label>
+        <input pInputText id="vorname" [ngModel]="draft().firstName" (ngModelChange)="patch({ firstName: $event })" name="firstName" required autocomplete="off">
+      </div>
+      <div class="field">
+        <label for="nachname">Nachname *</label>
+        <input pInputText id="nachname" [ngModel]="draft().lastName" (ngModelChange)="patch({ lastName: $event })" (blur)="suggestEmail()" name="lastName" required autocomplete="off">
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="email">E-Mail *</label>
+      <input pInputText id="email" type="email" [ngModel]="draft().email" (ngModelChange)="patch({ email: $event })" name="email" required autocomplete="off" placeholder="vorname.nachname@firma.de">
+    </div>
+
+    <div class="field">
+      <label for="abteilung">Abteilung *</label>
+      <p-select inputId="abteilung" [options]="departments" [ngModel]="draft().department" (ngModelChange)="patch({ department: $event })" name="department" placeholder="Abteilung auswählen" [editable]="true" appendTo="body" styleClass="w-full" />
+    </div>
+
+    <fieldset class="roles">
+      <legend>Rolle *</legend>
+      <label class="role" for="rolle-nutzer" [class.is-selected]="draft().role === 'nutzer'">
+        <p-radiobutton name="role" value="nutzer" inputId="rolle-nutzer" [ngModel]="draft().role" (ngModelChange)="patch({ role: $event })" />
+        <span class="role__text">
+          <span class="role__title"><i class="pi pi-user" aria-hidden="true"></i> Nutzer</span>
+          <span class="role__desc">Kann Räume buchen sowie eigene Buchungen ändern und stornieren.</span>
+        </span>
+      </label>
+      <label class="role" for="rolle-admin" [class.is-selected]="draft().role === 'admin'">
+        <p-radiobutton name="role" value="admin" inputId="rolle-admin" [ngModel]="draft().role" (ngModelChange)="patch({ role: $event })" />
+        <span class="role__text">
+          <span class="role__title"><i class="pi pi-shield" aria-hidden="true"></i> Admin</span>
+          <span class="role__desc">Zusätzlich: Räume und Benutzer verwalten, fremde Buchungen stornieren, Audit-Log einsehen.</span>
+        </span>
+      </label>
+    </fieldset>
+
+    <div class="actions">
+      <p-button label="Abbrechen" severity="secondary" [outlined]="true" routerLink="../" />
+      <p-button type="submit" label="Angaben prüfen" icon="pi pi-arrow-right" iconPos="right" [disabled]="invalid()" />
+    </div>
+  </form>
+}
+
+<p-dialog header="Benutzer anlegen?" [(visible)]="reviewOpen" [modal]="true" [draggable]="false" [style]="{ width: '30rem' }" [breakpoints]="{ '600px': '95vw' }">
+  <dl class="summary">
+    <dt>Name</dt><dd>{{ draft().firstName }} {{ draft().lastName }}</dd>
+    <dt>E-Mail</dt><dd>{{ draft().email }}</dd>
+    <dt>Abteilung</dt><dd>{{ draft().department }}</dd>
+    <dt>Rolle</dt><dd>{{ roleLabels[draft().role] }}</dd>
+  </dl>
+  <ng-template #footer>
+    <p-button label="Zurück" severity="secondary" [outlined]="true" (onClick)="reviewOpen.set(false)" />
+    <p-button label="Benutzer anlegen" icon="pi pi-check" (onClick)="confirm()" />
+  </ng-template>
+</p-dialog>

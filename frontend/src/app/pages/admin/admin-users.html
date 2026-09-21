@@ -1,0 +1,62 @@
+<div class="toolbar">
+  <div>
+    <h2>Benutzer</h2>
+    <p class="muted">{{ total() }} Konten, davon {{ adminCount() }} mit Admin-Rechten</p>
+  </div>
+  <p-button label="Neuer Benutzer" icon="pi pi-user-plus" routerLink="neu" />
+</div>
+
+<div class="filters">
+  <div class="field">
+    <label for="suche">Suche</label>
+    <p-iconfield>
+      <p-inputicon class="pi pi-search" />
+      <input pInputText id="suche" [ngModel]="query()" (ngModelChange)="query.set($event)" placeholder="Name, E-Mail oder Abteilung">
+    </p-iconfield>
+  </div>
+  <div class="field">
+    <label for="rolle">Rolle</label>
+    <p-select inputId="rolle" [options]="roleOptions" optionLabel="label" optionValue="value" [ngModel]="roleFilter()" (ngModelChange)="roleFilter.set($event)" appendTo="body" styleClass="w-full" />
+  </div>
+</div>
+
+<p-table [value]="users()" [rowHover]="true" responsiveLayout="stack" breakpoint="900px">
+  <ng-template #header>
+    <tr>
+      <th scope="col">Name</th>
+      <th scope="col">E-Mail</th>
+      <th scope="col">Abteilung</th>
+      <th scope="col">Rolle</th>
+      <th scope="col">Status</th>
+      <th scope="col">Letzte Anmeldung</th>
+      <th scope="col"><span class="visually-hidden">Aktionen</span></th>
+    </tr>
+  </ng-template>
+  <ng-template #body let-u>
+    <tr [class.is-inactive]="!u.active">
+      <td><strong>{{ u.lastName }}, {{ u.firstName }}</strong></td>
+      <td>{{ u.email }}</td>
+      <td>{{ u.department }}</td>
+      <td><p-tag [value]="roleLabel(u.role)" [severity]="u.role === 'admin' ? 'warn' : 'secondary'" [icon]="u.role === 'admin' ? 'pi pi-shield' : 'pi pi-user'" /></td>
+      <td>
+        @if (u.active) {
+          <p-tag value="aktiv" severity="success" />
+        } @else {
+          <p-tag value="gesperrt" severity="danger" icon="pi pi-lock" />
+        }
+      </td>
+      <td>{{ u.lastLogin ? (u.lastLogin | date: 'dd.MM.y, HH:mm') + ' Uhr' : 'noch nie' }}</td>
+      <td class="actions">
+        <p-button label="Bearbeiten" icon="pi pi-pencil" severity="secondary" [outlined]="true" size="small" [disabled]="true" />
+        @if (u.active) {
+          <p-button label="Sperren" icon="pi pi-lock" severity="danger" [outlined]="true" size="small" [disabled]="true" />
+        } @else {
+          <p-button label="Entsperren" icon="pi pi-lock-open" severity="secondary" [outlined]="true" size="small" [disabled]="true" />
+        }
+      </td>
+    </tr>
+  </ng-template>
+  <ng-template #emptymessage>
+    <tr><td colspan="7">Kein Benutzer passt zu den Filtern.</td></tr>
+  </ng-template>
+</p-table>

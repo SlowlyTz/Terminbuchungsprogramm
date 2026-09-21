@@ -1,0 +1,35 @@
+.toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.75rem;
+
+  h2 { margin-bottom: 0.125rem; }
+}
+
+.muted { margin: 0; color: var(--p-text-muted-color); }
+
+.quick {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.filters {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  margin-bottom: 0.5rem;
+
+  .field { flex: 1 1 14rem; max-width: 22rem; margin-bottom: 1rem; }
+  p-iconfield { width: 100%; display: block; }
+  input { width: 100%; }
+}
+
+:host ::ng-deep .clear { margin-bottom: 1rem; }
+
+.nowrap { white-space: nowrap; }

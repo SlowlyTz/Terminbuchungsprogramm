@@ -1,0 +1,58 @@
+<div class="toolbar">
+  <div>
+    <h2>Audit-Log</h2>
+    <p class="muted">Wer hat wann was gemacht. {{ entries().length }} von {{ total() }} Einträgen.</p>
+  </div>
+  <p-button label="Exportieren (CSV)" icon="pi pi-download" severity="secondary" [outlined]="true" [disabled]="true" />
+</div>
+
+<div class="quick" role="group" aria-label="Schnellfilter">
+  <p-button label="Alle" size="small" [outlined]="actions().length !== 0" [severity]="actions().length === 0 ? 'primary' : 'secondary'" (onClick)="actions.set([])" />
+  <p-button label="Anmeldungen" icon="pi pi-sign-in" size="small" [outlined]="!isOnly('login')" [severity]="isOnly('login') ? 'primary' : 'secondary'" (onClick)="quick('login')" />
+  <p-button label="Gebucht" icon="pi pi-calendar-plus" size="small" [outlined]="!isOnly('booking_created')" [severity]="isOnly('booking_created') ? 'primary' : 'secondary'" (onClick)="quick('booking_created')" />
+  <p-button label="Storniert" icon="pi pi-calendar-times" size="small" [outlined]="!isOnly('booking_cancelled')" [severity]="isOnly('booking_cancelled') ? 'primary' : 'secondary'" (onClick)="quick('booking_cancelled')" />
+  <p-button label="Benutzer" icon="pi pi-users" size="small" [outlined]="!isOnly('user_created')" [severity]="isOnly('user_created') ? 'primary' : 'secondary'" (onClick)="quick('user_created')" />
+</div>
+
+<div class="filters">
+  <div class="field">
+    <label for="aktionen">Aktion</label>
+    <p-multiselect inputId="aktionen" [options]="actionOptions" optionLabel="label" optionValue="value" [ngModel]="actions()" (ngModelChange)="actions.set($event)" placeholder="Alle Aktionen" display="chip" [showToggleAll]="false" appendTo="body" styleClass="w-full" />
+  </div>
+  <div class="field">
+    <label for="benutzer">Benutzer oder Text</label>
+    <p-iconfield>
+      <p-inputicon class="pi pi-search" />
+      <input pInputText id="benutzer" [ngModel]="query()" (ngModelChange)="query.set($event)" placeholder="z. B. Weizmann oder Kaiserslautern">
+    </p-iconfield>
+  </div>
+  <div class="field">
+    <label for="zeitraum">Zeitraum</label>
+    <p-datepicker inputId="zeitraum" selectionMode="range" dateFormat="dd.mm.yy" [ngModel]="range()" (ngModelChange)="range.set($event)" placeholder="von – bis" [showIcon]="true" [readonlyInput]="true" appendTo="body" styleClass="w-full" />
+  </div>
+  @if (filtered()) {
+    <p-button label="Filter zurücksetzen" icon="pi pi-filter-slash" [text]="true" severity="secondary" (onClick)="clear()" styleClass="clear" />
+  }
+</div>
+
+<p-table [value]="entries()" [rowHover]="true" responsiveLayout="stack" breakpoint="768px" [paginator]="entries().length > 20" [rows]="20">
+  <ng-template #header>
+    <tr>
+      <th scope="col">Zeitpunkt</th>
+      <th scope="col">Benutzer</th>
+      <th scope="col">Aktion</th>
+      <th scope="col">Details</th>
+    </tr>
+  </ng-template>
+  <ng-template #body let-e>
+    <tr>
+      <td class="nowrap">{{ e.at | date: 'EEE dd.MM.y' }}<br><span class="muted">{{ e.at | date: 'HH:mm' }} Uhr</span></td>
+      <td>{{ e.userName }}</td>
+      <td><p-tag [value]="label(e.action)" [icon]="icon(e.action)" [severity]="severity(e.action)" /></td>
+      <td>{{ e.details || '–' }}</td>
+    </tr>
+  </ng-template>
+  <ng-template #emptymessage>
+    <tr><td colspan="4">Keine Einträge für diese Filter.</td></tr>
+  </ng-template>
+</p-table>
