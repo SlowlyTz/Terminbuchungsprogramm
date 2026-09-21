@@ -69,7 +69,7 @@ Verantwortet alles, was der Nutzer sieht und bedient. Datenanbindung kommt von L
 
 Verantwortet die Verbindung zwischen DB und UI sowie Projektinfrastruktur.
 
-- **Projekt-Setup**: Monorepo anlegen, Backend in plain JavaScript (ES-Module, Frontend bleibt Angular/TypeScript), ESLint/Prettier, `npm`-Skripte, `.env`-Handling,
+- **Projekt-Setup**:Backend in plain JavaScript (ES-Module, Frontend bleibt Angular/TypeScript), ESLint/Prettier, `npm`-Skripte, `.env`-Handling,
   README mit Startanleitung, CI (Lint + Tests).
 - **Express-REST-API**: Routen für Auth, Räume, Buchungen, Nutzer; Eingabevalidierung; einheitliches
   Fehlerformat; Rollen (Nutzer/Admin). Pauls Queries als Prepared Statements über `mariadb`-Treiber einbinden.

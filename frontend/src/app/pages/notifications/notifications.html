@@ -1,0 +1,60 @@
+<div class="page">
+  <header class="page-header">
+    <h1>Benachrichtigungen</h1>
+    <p>Einladungen zu Terminen, die andere für Sie gebucht haben.</p>
+  </header>
+
+  <section aria-labelledby="open-heading">
+    <h2 id="open-heading">Offene Einladungen ({{ open().length }})</h2>
+    @if (open().length === 0) {
+      <p class="empty"><i class="pi pi-check-circle" aria-hidden="true"></i> Keine offenen Einladungen – alles beantwortet.</p>
+    }
+    <ul class="list">
+      @for (i of open(); track i.id) {
+        <li class="card card--open">
+          <div class="card__icon" aria-hidden="true"><i class="pi pi-envelope"></i></div>
+          <div class="card__body">
+            <p class="card__title"><strong>{{ i.fromName }}</strong> lädt Sie ein: „{{ i.title }}“</p>
+            <p class="card__meta">
+              <span><i class="pi pi-calendar" aria-hidden="true"></i> {{ i.start | date: 'EEEE, d. MMMM y' }}</span>
+              <span><i class="pi pi-clock" aria-hidden="true"></i> {{ i.start | date: 'HH:mm' }}–{{ i.end | date: 'HH:mm' }} Uhr</span>
+              <span><i class="pi pi-building" aria-hidden="true"></i> Raum {{ roomName(i.roomId) }}</span>
+            </p>
+            <p class="card__time">Eingegangen {{ i.createdAt | date: 'dd.MM.y, HH:mm' }} Uhr</p>
+          </div>
+          <div class="card__actions">
+            <p-button label="Annehmen" icon="pi pi-check" (onClick)="accept(i)" />
+            <p-button label="Ablehnen" icon="pi pi-times" severity="secondary" [outlined]="true" (onClick)="decline(i)" />
+          </div>
+        </li>
+      }
+    </ul>
+  </section>
+
+  @if (answered().length > 0) {
+    <section aria-labelledby="done-heading" class="answered">
+      <h2 id="done-heading">Beantwortet</h2>
+      <ul class="list">
+        @for (i of answered(); track i.id) {
+          <li class="card">
+            <div class="card__icon card__icon--muted" aria-hidden="true"><i class="pi" [class.pi-check]="i.status === 'accepted'" [class.pi-times]="i.status === 'declined'"></i></div>
+            <div class="card__body">
+              <p class="card__title">„{{ i.title }}“ von {{ i.fromName }}</p>
+              <p class="card__meta">
+                <span>{{ i.start | date: 'EEE, d. MMM' }}, {{ i.start | date: 'HH:mm' }}–{{ i.end | date: 'HH:mm' }} Uhr</span>
+                <span>Raum {{ roomName(i.roomId) }}</span>
+              </p>
+            </div>
+            <div class="card__actions">
+              @if (i.status === 'accepted') {
+                <p-tag value="Zugesagt" severity="success" icon="pi pi-check" />
+              } @else {
+                <p-tag value="Abgesagt" severity="secondary" icon="pi pi-times" />
+              }
+            </div>
+          </li>
+        }
+      </ul>
+    </section>
+  }
+</div>
