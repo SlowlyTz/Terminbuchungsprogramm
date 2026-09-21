@@ -1,0 +1,185 @@
+<div class="page">
+  <header class="page-header">
+    <h1>Termin buchen</h1>
+    <p>Wählen Sie zuerst den Raum. Danach sehen Sie im Kalender, wann er frei ist.</p>
+  </header>
+
+  <section class="room-pick" aria-labelledby="room-heading">
+    <h2 id="room-heading">Welcher Raum?</h2>
+    <div class="field">
+      <label for="raum">Raum suchen oder auswählen</label>
+      <p-select
+        inputId="raum"
+        [options]="rooms()"
+        optionLabel="name"
+        [ngModel]="room()"
+        (ngModelChange)="onRoomChange($event)"
+        [filter]="true"
+        filterBy="name"
+        filterPlaceholder="Raumname eingeben …"
+        placeholder="Raum auswählen"
+        [showClear]="true"
+        [autofocusFilter]="true"
+        appendTo="body"
+        styleClass="room-select"
+      >
+        <ng-template #item let-r>
+          <div class="room-option">
+            <span class="room-option__name">{{ r.name }}</span>
+            <span class="room-option__meta">{{ r.floor }} · bis {{ r.capacity }} Personen · {{ r.equipment.join(', ') }}</span>
+          </div>
+        </ng-template>
+      </p-select>
+    </div>
+
+    @if (room(); as r) {
+      <p class="room-info">
+        <strong>Raum {{ r.name }}</strong> · {{ r.floor }} · bis {{ r.capacity }} Personen
+        @for (e of r.equipment; track e) {
+          <p-tag [value]="e" severity="secondary" />
+        }
+      </p>
+    }
+  </section>
+
+  @if (confirmed(); as b) {
+    <div id="buchung-bestaetigt" tabindex="-1" class="confirmed">
+      <p-message severity="success" icon="pi pi-check-circle">
+        <div class="confirmed__body">
+          <strong>Ihre Buchung ist eingetragen.</strong>
+          <span>Raum {{ roomName(b.roomId) }}, {{ b.start | date: 'EEEE, d. MMMM y' }}, {{ b.start | date: 'HH:mm' }}–{{ b.end | date: 'HH:mm' }} Uhr, gebucht für {{ b.userName }}.</span>
+          @if (b.invitees.length > 0) {
+            <span>Einladungen gesendet an: {{ inviteeNames(b) }}.</span>
+          }
+          <span>Eine Bestätigung wurde per E-Mail gesendet. Sie können die Buchung jederzeit unter <a routerLink="/meine-buchungen">Meine Buchungen</a> stornieren.</span>
+        </div>
+      </p-message>
+    </div>
+  }
+
+  @if (room(); as r) {
+    <section class="calendar" aria-labelledby="cal-heading">
+      <div class="calendar__head">
+        <h2 id="cal-heading">Belegung von Raum {{ r.name }}</h2>
+        <div class="calendar__nav" role="group" aria-label="Zeitraum wechseln">
+          @if (isMobile()) {
+            <p-button icon="pi pi-chevron-left" label="Vortag" [outlined]="true" severity="secondary" size="small" (onClick)="previousDay()" />
+            <p-button label="Heute" [outlined]="true" severity="secondary" size="small" (onClick)="today()" />
+            <p-button icon="pi pi-chevron-right" iconPos="right" label="Folgetag" [outlined]="true" severity="secondary" size="small" (onClick)="nextDay()" />
+          } @else {
+            <p-button icon="pi pi-chevron-left" label="Vorherige Woche" [outlined]="true" severity="secondary" size="small" (onClick)="previousWeek()" />
+            <p-button label="Heute" [outlined]="true" severity="secondary" size="small" (onClick)="today()" />
+            <p-button icon="pi pi-chevron-right" iconPos="right" label="Nächste Woche" [outlined]="true" severity="secondary" size="small" (onClick)="nextWeek()" />
+          }
+        </div>
+      </div>
+      <p class="calendar__hint">Woche vom {{ weekDays()[0] | date: 'd. MMMM' }} bis {{ weekDays()[4] | date: 'd. MMMM y' }}. Klicken Sie auf eine freie Zeit, um dort eine Buchung zu beginnen.</p>
+
+      <app-week-calendar
+        [days]="visibleDays()"
+        [bookings]="roomBookings()"
+        [currentUserId]="user().id"
+        (slotSelected)="startDraft($event)"
+      />
+    </section>
+  }
+
+  <p-dialog
+    [header]="step() === 'form' ? 'Neue Buchung in Raum ' + (draft() ? roomName(draft()!.roomId) : '') : 'Buchung bestätigen'"
+    [visible]="dialogOpen()"
+    (visibleChange)="!$event && cancelDraft()"
+    [modal]="true"
+    [draggable]="false"
+    [style]="{ width: '36rem' }"
+    [breakpoints]="{ '640px': '95vw' }"
+    styleClass="booking-dialog"
+  >
+    @if (draft(); as d) {
+      @if (step() === 'form') {
+        <p class="form__date"><i class="pi pi-calendar" aria-hidden="true"></i> {{ d.date | date: 'EEEE, d. MMMM y' }}</p>
+
+        <div class="form__row">
+          <div class="field">
+            <label for="von">Von</label>
+            <input pInputText id="von" type="time" step="900" [ngModel]="d.startTime" (ngModelChange)="patchDraft({ startTime: $event })" required>
+          </div>
+          <div class="field">
+            <label for="bis">Bis</label>
+            <input pInputText id="bis" type="time" step="900" [ngModel]="d.endTime" (ngModelChange)="patchDraft({ endTime: $event })" required>
+          </div>
+        </div>
+
+        @if (draftInvalid()) {
+          <p-message severity="warn">Die Endzeit muss nach der Startzeit liegen.</p-message>
+        }
+        @if (conflict(); as c) {
+          <p-message severity="error">
+            Dieser Zeitraum ist bereits belegt: „{{ c.title }}“ von {{ c.start | date: 'HH:mm' }} bis {{ c.end | date: 'HH:mm' }} Uhr ({{ c.userName }}). Bitte eine andere Zeit wählen.
+          </p-message>
+        }
+
+        <div class="field">
+          <label for="teilnehmer">Teilnehmer einladen</label>
+          <p-autocomplete
+            inputId="teilnehmer"
+            [ngModel]="d.invitees"
+            (ngModelChange)="patchDraft({ invitees: $event })"
+            [suggestions]="suggestions()"
+            (completeMethod)="searchInvitees($event)"
+            optionLabel="name"
+            [multiple]="true"
+            [dropdown]="true"
+            [forceSelection]="true"
+            [minLength]="1"
+            placeholder="Name eingeben …"
+            appendTo="body"
+            styleClass="w-full"
+          >
+            <ng-template #item let-i>
+              <div class="invitee-option">
+                <span>{{ i.name }}</span>
+                <span class="invitee-option__meta">{{ i.department }}</span>
+              </div>
+            </ng-template>
+          </p-autocomplete>
+          <small class="hint">Eingeladene sehen den Termin unter „Benachrichtigungen“ und können zu- oder absagen.</small>
+        </div>
+
+        <details class="form__more">
+          <summary>Weitere Angaben (optional)</summary>
+          <div class="field">
+            <label for="titel">Titel der Besprechung</label>
+            <input pInputText id="titel" [ngModel]="d.title" (ngModelChange)="patchDraft({ title: $event })" placeholder="z. B. Monatsabschluss">
+          </div>
+        </details>
+      } @else {
+        <dl class="summary">
+          <dt>Raum</dt><dd>{{ roomName(d.roomId) }}</dd>
+          <dt>Datum</dt><dd>{{ d.date | date: 'EEEE, d. MMMM y' }}</dd>
+          <dt>Uhrzeit</dt><dd>{{ d.startTime }}–{{ d.endTime }} Uhr</dd>
+          <dt>Titel</dt><dd>{{ d.title || 'Besprechung' }}</dd>
+          <dt>Teilnehmer</dt>
+          <dd>
+            @if (d.invitees.length === 0) {
+              keine Einladungen
+            } @else {
+              <span class="chips">
+                @for (i of d.invitees; track i.id) { <p-tag [value]="i.name" severity="secondary" icon="pi pi-user" /> }
+              </span>
+            }
+          </dd>
+          <dt>Gebucht für</dt><dd>{{ user().name }}</dd>
+        </dl>
+      }
+    }
+    <ng-template #footer>
+      @if (step() === 'form') {
+        <p-button label="Abbrechen" severity="secondary" [outlined]="true" (onClick)="cancelDraft()" />
+        <p-button label="Buchung prüfen" icon="pi pi-arrow-right" iconPos="right" [disabled]="draftInvalid()" (onClick)="review()" />
+      } @else {
+        <p-button label="Zurück" severity="secondary" [outlined]="true" (onClick)="step.set('form')" />
+        <p-button label="Verbindlich buchen" icon="pi pi-check" (onClick)="confirm()" />
+      }
+    </ng-template>
+  </p-dialog>
+</div>

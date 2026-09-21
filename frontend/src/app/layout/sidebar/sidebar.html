@@ -1,0 +1,82 @@
+<div class="sidebar">
+  <div class="sidebar__brand">
+    <span class="sidebar__logo" aria-hidden="true"><i class="pi pi-calendar"></i></span>
+    <span class="sidebar__title">Raumbuchung</span>
+    @if (showClose()) {
+      <p-button icon="pi pi-times" [text]="true" severity="secondary" ariaLabel="Menü schließen" (onClick)="close.emit()" />
+    }
+  </div>
+
+  <nav class="sidebar__nav" aria-label="Seiten">
+    <ul>
+      @for (item of nav; track item.link) {
+        <li>
+          <a
+            [routerLink]="item.link"
+            routerLinkActive="is-active"
+            [routerLinkActiveOptions]="{ exact: item.exact ?? false }"
+            ariaCurrentWhenActive="page"
+          >
+            <i [class]="item.icon" aria-hidden="true"></i>
+            <span>{{ item.label }}</span>
+          </a>
+        </li>
+      }
+    </ul>
+  </nav>
+
+  <div class="sidebar__profile">
+    <button
+      type="button"
+      class="sidebar__profile-button"
+      (click)="menu.toggle($event)"
+      [attr.aria-expanded]="menu.visible"
+      aria-haspopup="menu"
+      aria-label="Profilmenü öffnen"
+    >
+      <p-avatar [label]="initials()" [image]="user().avatarUrl ?? undefined" shape="circle" size="large" />
+      <span class="sidebar__profile-text">
+        <span class="sidebar__profile-name">
+          {{ user().name }}
+          @if (notifications.unreadCount() > 0) {
+            <span class="count-badge count-badge--pulse" [attr.aria-label]="notifications.unreadCount() + ' neue Benachrichtigungen'">{{ notifications.unreadCount() }}</span>
+          }
+        </span>
+        <span class="sidebar__profile-role">{{ user().role }}</span>
+      </span>
+      <i class="pi pi-angle-up" aria-hidden="true"></i>
+    </button>
+    <p-menu #menu [model]="profileMenu()" [popup]="true" appendTo="body" styleClass="sidebar__profile-menu">
+      <ng-template #item let-item>
+        @if (item.id === 'theme') {
+          <button type="button" class="theme-item" (click)="onThemeClick($event)" role="menuitemcheckbox" [attr.aria-checked]="theme.dark()">
+            <span class="theme-item__icon" [class.is-dark]="theme.dark()" [class.is-spinning]="themeSpin()" aria-hidden="true">
+              <i class="pi pi-sun theme-item__sun"></i>
+              <i class="pi pi-moon theme-item__moon"></i>
+            </span>
+            <span class="theme-item__label">{{ item.label }}</span>
+            <span class="theme-item__switch" [class.is-on]="theme.dark()"><span class="theme-item__knob"></span></span>
+          </button>
+        } @else if (item.id === 'notifications') {
+          <a class="menu-item" [routerLink]="item.routerLink" role="menuitem">
+            <i [class]="item.icon" aria-hidden="true"></i>
+            <span class="menu-item__label">{{ item.label }}</span>
+            @if (notifications.unreadCount() > 0) {
+              <span class="count-badge" [attr.aria-label]="notifications.unreadCount() + ' neue'">{{ notifications.unreadCount() }}</span>
+            }
+          </a>
+        } @else if (item.routerLink) {
+          <a class="menu-item" [routerLink]="item.routerLink" role="menuitem">
+            <i [class]="item.icon" aria-hidden="true"></i>
+            <span>{{ item.label }}</span>
+          </a>
+        } @else {
+          <button type="button" class="menu-item" role="menuitem">
+            <i [class]="item.icon" aria-hidden="true"></i>
+            <span>{{ item.label }}</span>
+          </button>
+        }
+      </ng-template>
+    </p-menu>
+  </div>
+</div>

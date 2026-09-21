@@ -1,0 +1,28 @@
+<a class="skip-link" href="#hauptinhalt">Zum Inhalt springen</a>
+
+<div class="shell">
+  <aside class="shell__sidebar" aria-label="Hauptnavigation">
+    <app-sidebar />
+  </aside>
+
+  <header class="shell__topbar">
+    <p-button
+      icon="pi pi-bars"
+      [text]="true"
+      severity="secondary"
+      ariaLabel="Menü öffnen"
+      (onClick)="drawerOpen.set(true)"
+    />
+    <span class="shell__brand">Raumbuchung</span>
+  </header>
+
+  <p-drawer [(visible)]="drawerOpen" position="left" [modal]="true" styleClass="shell__drawer" ariaCloseLabel="Menü schließen">
+    <ng-template #headless>
+      <app-sidebar [showClose]="true" (close)="drawerOpen.set(false)" />
+    </ng-template>
+  </p-drawer>
+
+  <main id="hauptinhalt" class="shell__main" tabindex="-1">
+    <router-outlet />
+  </main>
+</div>

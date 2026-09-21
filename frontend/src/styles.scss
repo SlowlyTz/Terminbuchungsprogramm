@@ -1,0 +1,204 @@
+@use "@openng/icons/openng-icons.css";
+
+:root {
+  --app-sidebar-width: 17rem;
+  --app-font: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+
+  // App-level colors on top of the Optimus tokens; redefined for dark mode below.
+  --app-bg: var(--p-surface-100);
+  --app-surface-muted: var(--p-surface-50);
+  --app-booked-bg: var(--p-surface-200);
+  --app-booked-border: var(--p-surface-500);
+  --app-booked-swatch: var(--p-surface-300);
+  --app-own-bg: var(--p-primary-100);
+}
+
+:root.app-dark {
+  --app-bg: var(--p-surface-950);
+  --app-surface-muted: var(--p-surface-800);
+  --app-booked-bg: var(--p-surface-700);
+  --app-booked-border: var(--p-surface-400);
+  --app-booked-swatch: var(--p-surface-600);
+  --app-own-bg: color-mix(in srgb, var(--p-primary-color) 28%, var(--p-surface-900));
+}
+
+// Cross-fade while the theme switches; the class is only present for a moment.
+:root.theme-transition,
+:root.theme-transition *,
+:root.theme-transition *::before,
+:root.theme-transition *::after {
+  transition: background-color 0.35s ease, color 0.35s ease, border-color 0.35s ease, fill 0.35s ease !important;
+}
+
+html {
+  // Personas: at least 16 px base font, must survive 150 % zoom.
+  font-size: 16px;
+}
+
+body {
+  margin: 0;
+  font-family: var(--app-font);
+  color: var(--p-text-color);
+  background: var(--app-bg);
+  line-height: 1.5;
+}
+
+h1, h2, h3 {
+  margin: 0 0 0.5rem;
+  line-height: 1.25;
+}
+
+h1 { font-size: 1.75rem; }
+h2 { font-size: 1.25rem; }
+
+a { color: var(--p-primary-color); }
+
+*:focus-visible {
+  outline: 3px solid var(--p-primary-color);
+  outline-offset: 2px;
+}
+
+.w-full { width: 100%; }
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.page {
+  max-width: 72rem;
+  margin: 0 auto;
+}
+
+.page-header {
+  margin-bottom: 1.5rem;
+
+  p { margin: 0; color: var(--p-text-muted-color); }
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  margin-bottom: 1rem;
+
+  label { font-weight: 600; }
+}
+
+// Profile drop-up: appended to body, so it is styled globally.
+.sidebar__profile-menu {
+  min-width: 16rem;
+
+  .menu-item,
+  .theme-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    width: 100%;
+    padding: 0.625rem 0.875rem;
+    border: 0;
+    border-radius: var(--p-menu-item-border-radius, 0.375rem);
+    background: transparent;
+    color: var(--p-text-color);
+    font: inherit;
+    text-align: left;
+    text-decoration: none;
+    cursor: pointer;
+
+    i { width: 1.25rem; text-align: center; color: var(--p-text-muted-color); }
+
+    &:hover { background: var(--p-content-hover-background); }
+  }
+
+  .theme-item__label,
+  .menu-item__label { flex: 1; }
+
+  // Sun/moon icon: both glyphs stacked, the active one fades in while the stack rotates.
+  .theme-item__icon {
+    position: relative;
+    width: 1.25rem;
+    height: 1.25rem;
+    display: grid;
+    place-items: center;
+    transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+    i {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      width: auto;
+      transition: opacity 0.3s ease, transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .theme-item__sun { opacity: 1; transform: rotate(0) scale(1); color: #d97706; }
+    .theme-item__moon { opacity: 0; transform: rotate(-90deg) scale(0.5); color: #60a5fa; }
+
+    &.is-dark {
+      .theme-item__sun { opacity: 0; transform: rotate(90deg) scale(0.5); }
+      .theme-item__moon { opacity: 1; transform: rotate(0) scale(1); }
+    }
+
+    &.is-spinning { transform: rotate(360deg); }
+  }
+
+  // Small switch on the right so the state is visible at a glance.
+  .theme-item__switch {
+    position: relative;
+    width: 2.25rem;
+    height: 1.25rem;
+    border-radius: 999px;
+    background: var(--p-surface-400);
+    transition: background-color 0.3s ease;
+
+    &.is-on { background: var(--p-primary-color); }
+  }
+
+  .theme-item__knob {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: calc(1.25rem - 4px);
+    height: calc(1.25rem - 4px);
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  .is-on .theme-item__knob { transform: translateX(1rem); }
+}
+
+// Unread counter, used in the profile button and the drop-up.
+.count-badge {
+  display: inline-grid;
+  place-items: center;
+  min-width: 1.25rem;
+  height: 1.25rem;
+  padding: 0 0.375rem;
+  border-radius: 999px;
+  background: var(--p-red-500, #ef4444);
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1;
+
+  &--pulse { animation: badge-pop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
+}
+
+@keyframes badge-pop {
+  from { transform: scale(0); }
+  to { transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .count-badge--pulse { animation: none; }
+  :root.theme-transition * { transition: none !important; }
+  .sidebar__profile-menu .theme-item__icon,
+  .sidebar__profile-menu .theme-item__icon i,
+  .sidebar__profile-menu .theme-item__knob { transition: none; }
+}

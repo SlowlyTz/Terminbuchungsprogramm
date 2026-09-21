@@ -1,0 +1,114 @@
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 100vh;
+}
+
+.sidebar__brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1.25rem 1rem;
+  border-bottom: 1px solid var(--p-content-border-color);
+
+  p-button { margin-left: auto; }
+}
+
+.sidebar__logo {
+  display: inline-grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 0.5rem;
+  background: var(--p-primary-color);
+  color: var(--p-primary-contrast-color);
+}
+
+.sidebar__title {
+  font-weight: 700;
+  font-size: 1.125rem;
+}
+
+.sidebar__nav {
+  flex: 1;
+  padding: 0.75rem;
+
+  ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 0.25rem;
+  }
+
+  a {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 0.875rem;
+    border-radius: 0.5rem;
+    color: var(--p-text-color);
+    text-decoration: none;
+    font-weight: 500;
+
+    i { width: 1.25rem; text-align: center; color: var(--p-text-muted-color); }
+
+    &:hover { background: var(--p-content-hover-background); }
+
+    &.is-active {
+      background: var(--p-highlight-background);
+      color: var(--p-highlight-color);
+      i { color: var(--p-highlight-color); }
+    }
+  }
+}
+
+.sidebar__profile {
+  padding: 0.75rem;
+  border-top: 1px solid var(--p-content-border-color);
+}
+
+.sidebar__profile-button {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.5rem;
+  border: 0;
+  border-radius: 0.5rem;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+
+  &:hover { background: var(--p-content-hover-background); }
+
+  > i { margin-left: auto; color: var(--p-text-muted-color); }
+}
+
+.sidebar__profile-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.sidebar__profile-name {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 700;
+  font-size: 1.0625rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sidebar__profile-role {
+  font-size: 0.875rem;
+  color: var(--p-text-muted-color);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

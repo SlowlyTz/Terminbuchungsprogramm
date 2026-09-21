@@ -1,0 +1,55 @@
+<div class="cal" role="group" aria-label="Belegungskalender">
+  <div class="cal__legend" aria-hidden="true">
+    <span class="cal__legend-item"><span class="swatch swatch--free"></span> frei</span>
+    <span class="cal__legend-item"><span class="swatch swatch--booked"></span> belegt</span>
+    <span class="cal__legend-item"><span class="swatch swatch--own"></span> eigene Buchung</span>
+  </div>
+
+  <div class="cal__grid" [style.--cal-days]="model().length" [style.--cal-hours]="hours().length">
+    <div class="cal__corner"></div>
+    @for (day of model(); track day.date.getTime()) {
+      <div class="cal__day-head" [class.is-today]="day.isToday">
+        <span class="cal__day-name">{{ day.date | date: 'EEEE' }}</span>
+        <span class="cal__day-date">{{ day.date | date: 'd. MMM' }}</span>
+      </div>
+    }
+
+    <div class="cal__times" aria-hidden="true">
+      @for (h of hours(); track h) {
+        <div class="cal__time">{{ h }}:00</div>
+      }
+    </div>
+
+    @for (day of model(); track day.date.getTime()) {
+      <div class="cal__day" [class.is-today]="day.isToday">
+        <div class="cal__slots">
+          @for (slot of day.slots; track slot.start.getTime()) {
+            <button
+              type="button"
+              class="cal__slot"
+              [class.is-booked]="slot.booked"
+              [disabled]="slot.booked"
+              [attr.aria-label]="slot.label"
+              (click)="slotSelected.emit(slot.start)"
+            ></button>
+          }
+        </div>
+
+        @for (p of day.bookings; track p.booking.id) {
+          <div
+            class="cal__booking"
+            [class.is-own]="p.own"
+            [style.top.%]="p.top"
+            [style.height.%]="p.height"
+            role="note"
+            [attr.aria-label]="'Belegt: ' + p.booking.title + ', ' + (p.booking.start | date: 'HH:mm') + ' bis ' + (p.booking.end | date: 'HH:mm') + ' Uhr, ' + p.booking.userName"
+          >
+            <span class="cal__booking-time">{{ p.booking.start | date: 'HH:mm' }}–{{ p.booking.end | date: 'HH:mm' }}</span>
+            <span class="cal__booking-title">{{ p.booking.title }}</span>
+            <span class="cal__booking-user">{{ p.own ? 'Sie' : p.booking.userName }}</span>
+          </div>
+        }
+      </div>
+    }
+  </div>
+</div>

@@ -1,0 +1,50 @@
+<div class="page">
+  <header class="page-header">
+    <h1>Meine Buchungen</h1>
+    <p>Alle Reservierungen, die auf Ihren Namen laufen.</p>
+  </header>
+
+  @if (notice(); as text) {
+    <p-message severity="success" [closable]="true" (onClose)="notice.set(null)" styleClass="mb">{{ text }}</p-message>
+  }
+
+  <p-table [value]="bookings()" [rowHover]="true" responsiveLayout="stack" breakpoint="768px">
+    <ng-template #header>
+      <tr>
+        <th scope="col">Datum</th>
+        <th scope="col">Uhrzeit</th>
+        <th scope="col">Raum</th>
+        <th scope="col">Titel</th>
+        <th scope="col"><span class="visually-hidden">Aktionen</span></th>
+      </tr>
+    </ng-template>
+    <ng-template #body let-b>
+      <tr>
+        <td>{{ b.start | date: 'EEEE, d. MMMM y' }}</td>
+        <td>{{ b.start | date: 'HH:mm' }}–{{ b.end | date: 'HH:mm' }} Uhr</td>
+        <td>{{ roomName(b.roomId) }}</td>
+        <td>{{ b.title }}</td>
+        <td class="actions">
+          <p-button label="Buchung stornieren" icon="pi pi-trash" severity="danger" [outlined]="true" size="small" (onClick)="toCancel.set(b)" />
+        </td>
+      </tr>
+    </ng-template>
+    <ng-template #emptymessage>
+      <tr><td colspan="5">Sie haben derzeit keine Buchungen.</td></tr>
+    </ng-template>
+  </p-table>
+
+  <p-dialog header="Buchung stornieren?" [visible]="toCancel() !== null" (visibleChange)="!$event && toCancel.set(null)" [modal]="true" [draggable]="false" [style]="{ width: '30rem' }" [breakpoints]="{ '600px': '95vw' }">
+    @if (toCancel(); as b) {
+      <p>
+        <strong>{{ b.title }}</strong><br>
+        Raum {{ roomName(b.roomId) }}, {{ b.start | date: 'EEE d.MM.' }}, {{ b.start | date: 'HH:mm' }}–{{ b.end | date: 'HH:mm' }} Uhr
+      </p>
+      <p>Die Reservierung wird gelöscht und der Raum wieder freigegeben.</p>
+    }
+    <ng-template #footer>
+      <p-button label="Zurück" severity="secondary" [outlined]="true" (onClick)="toCancel.set(null)" />
+      <p-button label="Ja, stornieren" severity="danger" (onClick)="confirmCancel()" />
+    </ng-template>
+  </p-dialog>
+</div>

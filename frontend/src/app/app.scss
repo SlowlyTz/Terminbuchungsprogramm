@@ -1,0 +1,73 @@
+:host {
+  display: block;
+  min-height: 100vh;
+}
+
+.skip-link {
+  position: absolute;
+  left: -999px;
+  top: 0;
+  background: var(--p-primary-color);
+  color: var(--p-primary-contrast-color);
+  padding: 0.5rem 1rem;
+  z-index: 2000;
+
+  &:focus { left: 0.5rem; top: 0.5rem; }
+}
+
+.shell {
+  display: grid;
+  min-height: 100vh;
+  grid-template-columns: var(--app-sidebar-width) 1fr;
+  grid-template-areas: "sidebar main";
+}
+
+.shell__sidebar {
+  grid-area: sidebar;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  background: var(--p-content-background);
+  border-right: 1px solid var(--p-content-border-color);
+}
+
+.shell__topbar {
+  display: none;
+  grid-area: topbar;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--p-content-background);
+  border-bottom: 1px solid var(--p-content-border-color);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.shell__brand {
+  font-weight: 700;
+  font-size: 1.125rem;
+}
+
+.shell__main {
+  grid-area: main;
+  padding: 2rem;
+  min-width: 0;
+}
+
+:host ::ng-deep .shell__drawer {
+  width: var(--app-sidebar-width);
+  max-width: 85vw;
+}
+
+@media (max-width: 991px) {
+  .shell {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
+    grid-template-areas: "topbar" "main";
+  }
+
+  .shell__sidebar { display: none; }
+  .shell__topbar { display: flex; }
+  .shell__main { padding: 1rem; }
+}

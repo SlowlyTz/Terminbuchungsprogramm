@@ -1,0 +1,128 @@
+:host {
+  --cal-hour-height: 3.5rem;
+  --cal-time-col: 3.75rem;
+  display: block;
+}
+
+.cal__legend {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.75rem;
+  font-size: 0.9375rem;
+  color: var(--p-text-muted-color);
+}
+
+.cal__legend-item { display: inline-flex; align-items: center; gap: 0.375rem; }
+
+.swatch {
+  width: 1rem;
+  height: 1rem;
+  border-radius: 0.25rem;
+  border: 1px solid var(--app-booked-swatch);
+  &--free { background: var(--p-content-background); }
+  &--booked { background: var(--app-booked-swatch); }
+  &--own { background: var(--app-own-bg); border-color: var(--p-primary-color); }
+}
+
+.cal__grid {
+  display: grid;
+  grid-template-columns: var(--cal-time-col) repeat(var(--cal-days), minmax(0, 1fr));
+  grid-template-rows: auto 1fr;
+  background: var(--p-content-background);
+  border: 1px solid var(--p-content-border-color);
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+.cal__corner,
+.cal__day-head {
+  padding: 0.5rem 0.25rem;
+  border-bottom: 1px solid var(--p-content-border-color);
+  background: var(--app-surface-muted);
+}
+
+.cal__day-head {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border-left: 1px solid var(--p-content-border-color);
+
+  &.is-today { color: var(--p-highlight-color); font-weight: 700; }
+}
+
+.cal__day-name { font-weight: 600; }
+.cal__day-date { font-size: 0.875rem; color: var(--p-text-muted-color); }
+
+.cal__times {
+  display: grid;
+  grid-template-rows: repeat(var(--cal-hours), var(--cal-hour-height));
+}
+
+.cal__time {
+  font-size: 0.8125rem;
+  color: var(--p-text-muted-color);
+  text-align: right;
+  padding-right: 0.5rem;
+  transform: translateY(-0.5em);
+}
+
+.cal__day {
+  position: relative;
+  height: calc(var(--cal-hours) * var(--cal-hour-height));
+  border-left: 1px solid var(--p-content-border-color);
+  background-image: linear-gradient(var(--p-content-border-color) 1px, transparent 1px);
+  background-size: 100% var(--cal-hour-height);
+
+  &.is-today { background-color: var(--p-highlight-background); }
+}
+
+.cal__slots {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-auto-rows: 1fr;
+}
+
+.cal__slot {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  cursor: pointer;
+
+  &:hover:not(:disabled) { background: var(--p-highlight-background); }
+  &:focus-visible { outline-offset: -3px; z-index: 2; }
+  &.is-booked { cursor: not-allowed; }
+}
+
+.cal__booking {
+  position: absolute;
+  left: 3px;
+  right: 3px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  padding: 0.25rem 0.375rem;
+  overflow: hidden;
+  border-radius: 0.375rem;
+  background: var(--app-booked-bg);
+  border-left: 4px solid var(--app-booked-border);
+  color: var(--p-text-color);
+  font-size: 0.8125rem;
+  line-height: 1.25;
+  pointer-events: none;
+
+  &.is-own {
+    background: var(--app-own-bg);
+    border-left-color: var(--p-primary-color);
+  }
+}
+
+.cal__booking-time { font-weight: 600; }
+.cal__booking-title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cal__booking-user { color: var(--p-text-muted-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+@media (max-width: 767px) {
+  :host { --cal-hour-height: 3rem; --cal-time-col: 3rem; }
+  .cal__day-name { font-size: 0.875rem; }
+}
