@@ -54,8 +54,12 @@ export type AuditAction =
   | 'booking_changed'
   | 'booking_cancelled'
   | 'user_created'
+  | 'user_changed'
   | 'role_changed'
-  | 'user_locked';
+  | 'user_locked'
+  | 'room_created'
+  | 'room_changed'
+  | 'room_deleted';
 
 export interface AuditEntry {
   id: number;
@@ -72,8 +76,12 @@ export const AUDIT_ACTION_LABELS: Record<AuditAction, string> = {
   booking_changed: 'Buchung geändert',
   booking_cancelled: 'Buchung storniert',
   user_created: 'Benutzer angelegt',
+  user_changed: 'Benutzer geändert',
   role_changed: 'Rolle geändert',
   user_locked: 'Benutzer gesperrt',
+  room_created: 'Raum angelegt',
+  room_changed: 'Raum geändert',
+  room_deleted: 'Raum gelöscht',
 };
 
 export const ROLE_LABELS: Record<Role, string> = {

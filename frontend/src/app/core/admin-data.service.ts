@@ -1,6 +1,6 @@
 import { Injectable, signal } from '@angular/core';
 
-import { AdminUser, AuditAction, AuditEntry } from './models';
+import { AdminUser, AuditAction, AuditEntry, ROLE_LABELS, Role } from './models';
 
 function ago(days: number, hour: number, minute = 0): Date {
   const d = new Date();
@@ -86,6 +86,56 @@ export class AdminDataService {
     this._users.update((list) => [...list, created]);
     this.log(actor, 'user_created', `${created.firstName} ${created.lastName} (${created.department}), Rolle ${user.role === 'admin' ? 'Admin' : 'Nutzer'}`);
     return created;
+  }
+
+  updateUser(id: number, changes: Pick<AdminUser, 'firstName' | 'lastName' | 'email' | 'department'>, actor: string): AdminUser | undefined {
+    let updated: AdminUser | undefined;
+    this._users.update((list) =>
+      list.map((u) => {
+        if (u.id !== id) return u;
+        updated = { ...u, ...changes };
+        return updated;
+      }),
+    );
+    if (updated) this.log(actor, 'user_changed', `Stammdaten geändert: ${updated.firstName} ${updated.lastName} (${updated.department})`);
+    return updated;
+  }
+
+  setActive(id: number, active: boolean, actor: string): AdminUser | undefined {
+    let updated: AdminUser | undefined;
+    this._users.update((list) =>
+      list.map((u) => {
+        if (u.id !== id) return u;
+        updated = { ...u, active };
+        return updated;
+      }),
+    );
+    if (updated) {
+      const name = `${updated.firstName} ${updated.lastName}`;
+      this.log(actor, 'user_locked', active ? `${name}: Konto entsperrt` : `${name}: Konto gesperrt`);
+    }
+    return updated;
+  }
+
+  setRole(id: number, role: Role, actor: string): AdminUser | undefined {
+    let previous: Role | undefined;
+    let updated: AdminUser | undefined;
+    this._users.update((list) =>
+      list.map((u) => {
+        if (u.id !== id) return u;
+        previous = u.role;
+        updated = { ...u, role };
+        return updated;
+      }),
+    );
+    if (updated && previous && previous !== role) {
+      this.log(
+        actor,
+        'role_changed',
+        `${updated.firstName} ${updated.lastName}: ${ROLE_LABELS[previous]} → ${ROLE_LABELS[role]}`,
+      );
+    }
+    return updated;
   }
 
   /** Appends an entry to the audit log; callers pass the acting user by name. */

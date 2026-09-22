@@ -47,16 +47,114 @@
       </td>
       <td>{{ u.lastLogin ? (u.lastLogin | date: 'dd.MM.y, HH:mm') + ' Uhr' : 'noch nie' }}</td>
       <td class="actions">
-        <p-button label="Bearbeiten" icon="pi pi-pencil" severity="secondary" [outlined]="true" size="small" [disabled]="true" />
+        <p-button label="Bearbeiten" icon="pi pi-pencil" severity="secondary" [outlined]="true" size="small" (onClick)="edit(u)" />
         @if (u.active) {
-          <p-button label="Sperren" icon="pi pi-lock" severity="danger" [outlined]="true" size="small" [disabled]="true" />
+          <p-button label="Sperren" icon="pi pi-lock" severity="danger" [outlined]="true" size="small" (onClick)="toToggle.set(u)" />
         } @else {
-          <p-button label="Entsperren" icon="pi pi-lock-open" severity="secondary" [outlined]="true" size="small" [disabled]="true" />
+          <p-button label="Entsperren" icon="pi pi-lock-open" severity="secondary" [outlined]="true" size="small" (onClick)="toToggle.set(u)" />
         }
       </td>
     </tr>
   </ng-template>
   <ng-template #emptymessage>
-    <tr><td colspan="7">Kein Benutzer passt zu den Filtern.</td></tr>
+    <tr>
+      <td colspan="7">
+        <app-empty-state
+          icon="pi pi-users"
+          title="Kein Benutzer passt zu den Filtern"
+          text="Ändern Sie die Suche oder die Rollenauswahl."
+          actionLabel="Filter zurücksetzen"
+          actionIcon="pi pi-filter-slash"
+          [compact]="true"
+          (action)="clearFilters()"
+        />
+      </td>
+    </tr>
   </ng-template>
 </p-table>
+
+<p-dialog
+  header="Benutzer bearbeiten"
+  [visible]="editing() !== null"
+  (visibleChange)="!$event && editing.set(null)"
+  [modal]="true"
+  [draggable]="false"
+  [style]="{ width: '34rem' }"
+  [breakpoints]="{ '640px': '95vw' }"
+>
+  @if (draft(); as d) {
+    <div class="form__row">
+      <div class="field">
+        <label for="vorname">Vorname</label>
+        <input pInputText id="vorname" [ngModel]="d.firstName" (ngModelChange)="patch({ firstName: $event })">
+        @if (submitted() && !d.firstName.trim()) {
+          <small class="field__error"><i class="pi pi-exclamation-circle" aria-hidden="true"></i> Pflichtfeld.</small>
+        }
+      </div>
+      <div class="field">
+        <label for="nachname">Nachname</label>
+        <input pInputText id="nachname" [ngModel]="d.lastName" (ngModelChange)="patch({ lastName: $event })">
+        @if (submitted() && !d.lastName.trim()) {
+          <small class="field__error"><i class="pi pi-exclamation-circle" aria-hidden="true"></i> Pflichtfeld.</small>
+        }
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="mail">E-Mail-Adresse</label>
+      <input pInputText id="mail" type="email" [ngModel]="d.email" (ngModelChange)="patch({ email: $event })">
+      @if (submitted() && !d.email.trim()) {
+        <small class="field__error"><i class="pi pi-exclamation-circle" aria-hidden="true"></i> Pflichtfeld.</small>
+      }
+    </div>
+
+    <div class="form__row">
+      <div class="field">
+        <label for="abteilung">Abteilung</label>
+        <p-select inputId="abteilung" [options]="departments" [ngModel]="d.department" (ngModelChange)="patch({ department: $event })" placeholder="Abteilung wählen" appendTo="body" styleClass="w-full" />
+      </div>
+      <div class="field">
+        <label for="benutzer-rolle">Rolle</label>
+        <p-select inputId="benutzer-rolle" [options]="roleChoices" optionLabel="label" optionValue="value" [ngModel]="d.role" (ngModelChange)="patch({ role: $event })" appendTo="body" styleClass="w-full" />
+      </div>
+    </div>
+
+    @if (losingOwnAdmin()) {
+      <p-message severity="warn" icon="pi pi-exclamation-triangle">
+        Sie entziehen sich selbst die Admin-Rechte. Danach haben Sie keinen Zugang mehr zur Verwaltung.
+      </p-message>
+    }
+  }
+
+  <ng-template #footer>
+    <p-button label="Abbrechen" severity="secondary" [outlined]="true" (onClick)="editing.set(null)" />
+    <p-button label="Änderungen speichern" icon="pi pi-check" (onClick)="save()" />
+  </ng-template>
+</p-dialog>
+
+<p-dialog
+  [header]="toToggle()?.active ? 'Konto sperren?' : 'Konto entsperren?'"
+  [visible]="toToggle() !== null"
+  (visibleChange)="!$event && toToggle.set(null)"
+  [modal]="true"
+  [draggable]="false"
+  [style]="{ width: '30rem' }"
+  [breakpoints]="{ '600px': '95vw' }"
+>
+  @if (toToggle(); as u) {
+    <p><strong>{{ u.firstName }} {{ u.lastName }}</strong> · {{ u.department }} · {{ u.email }}</p>
+    @if (u.active) {
+      <p>Das Konto wird gesperrt. Die Person kann sich nicht mehr anmelden; bestehende Buchungen bleiben erhalten.</p>
+    } @else {
+      <p>Das Konto wird wieder freigegeben und die Person kann sich erneut anmelden.</p>
+    }
+  }
+  <ng-template #footer>
+    <p-button label="Abbrechen" severity="secondary" [outlined]="true" (onClick)="toToggle.set(null)" />
+    <p-button
+      [label]="toToggle()?.active ? 'Ja, sperren' : 'Ja, entsperren'"
+      [severity]="toToggle()?.active ? 'danger' : 'primary'"
+      (onClick)="confirmToggle()"
+    />
+  </ng-template>
+</p-dialog>

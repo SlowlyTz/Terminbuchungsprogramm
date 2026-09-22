@@ -20,8 +20,12 @@ const ACTION_META: Record<AuditAction, { icon: string; severity: 'success' | 'in
   booking_changed: { icon: 'pi pi-pencil', severity: 'info' },
   booking_cancelled: { icon: 'pi pi-calendar-times', severity: 'danger' },
   user_created: { icon: 'pi pi-user-plus', severity: 'success' },
+  user_changed: { icon: 'pi pi-user-edit', severity: 'info' },
   role_changed: { icon: 'pi pi-shield', severity: 'warn' },
   user_locked: { icon: 'pi pi-lock', severity: 'danger' },
+  room_created: { icon: 'pi pi-building', severity: 'success' },
+  room_changed: { icon: 'pi pi-building', severity: 'info' },
+  room_deleted: { icon: 'pi pi-trash', severity: 'danger' },
 };
 
 @Component({

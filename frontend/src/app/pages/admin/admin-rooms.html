@@ -1,0 +1,163 @@
+<div class="toolbar">
+  <div>
+    <h2>Räume</h2>
+    <p class="muted">{{ data.rooms().length }} buchbare Räume</p>
+  </div>
+  <p-button label="Neuer Raum" icon="pi pi-plus" (onClick)="newRoom()" />
+</div>
+
+<p-table [value]="data.rooms()" [rowHover]="true" responsiveLayout="stack" breakpoint="900px">
+  <ng-template #header>
+    <tr>
+      <th scope="col">Name</th>
+      <th scope="col">Etage</th>
+      <th scope="col">Kapazität</th>
+      <th scope="col">Ausstattung</th>
+      <th scope="col">Künftige Buchungen</th>
+      <th scope="col"><span class="visually-hidden">Aktionen</span></th>
+    </tr>
+  </ng-template>
+  <ng-template #body let-r>
+    <tr>
+      <td><strong>{{ r.name }}</strong></td>
+      <td>{{ r.floor }}</td>
+      <td>{{ r.capacity }} Personen</td>
+      <td>
+        <span class="tags">
+          @for (e of r.equipment; track e) {
+            <p-tag [value]="e" severity="secondary" />
+          } @empty {
+            <span class="muted">keine</span>
+          }
+        </span>
+      </td>
+      <td>{{ bookingCount(r.id) }}</td>
+      <td class="actions">
+        <p-button label="Bearbeiten" icon="pi pi-pencil" severity="secondary" [outlined]="true" size="small" (onClick)="editRoom(r)" />
+        <p-button label="Löschen" icon="pi pi-trash" severity="danger" [outlined]="true" size="small" (onClick)="toDelete.set(r)" />
+      </td>
+    </tr>
+  </ng-template>
+  <ng-template #emptymessage>
+    <tr>
+      <td colspan="6">
+        <app-empty-state
+          icon="pi pi-building"
+          title="Noch keine Räume angelegt"
+          text="Legen Sie den ersten Besprechungsraum an, damit Mitarbeitende ihn buchen können."
+          actionLabel="Neuer Raum"
+          actionIcon="pi pi-plus"
+          (action)="newRoom()"
+        />
+      </td>
+    </tr>
+  </ng-template>
+</p-table>
+
+<p-dialog
+  [header]="isNew() ? 'Neuen Raum anlegen' : 'Raum bearbeiten'"
+  [visible]="dialogOpen()"
+  (visibleChange)="!$event && editingId.set(null)"
+  [modal]="true"
+  [draggable]="false"
+  [style]="{ width: '32rem' }"
+  [breakpoints]="{ '640px': '95vw' }"
+>
+  <div class="field">
+    <label for="raum-name">Name</label>
+    <input
+      pInputText
+      id="raum-name"
+      [ngModel]="draft().name"
+      (ngModelChange)="patch({ name: $event })"
+      placeholder="z. B. Trier"
+      [attr.aria-invalid]="submitted() && (draft().name.trim() === '' || nameTaken()) ? 'true' : null"
+    >
+    @if (submitted() && draft().name.trim() === '') {
+      <small class="field__error"><i class="pi pi-exclamation-circle" aria-hidden="true"></i> Bitte geben Sie einen Namen ein.</small>
+    } @else if (nameTaken()) {
+      <small class="field__error"><i class="pi pi-exclamation-circle" aria-hidden="true"></i> Diesen Raumnamen gibt es bereits.</small>
+    }
+  </div>
+
+  <div class="form__row">
+    <div class="field">
+      <label for="raum-etage">Etage</label>
+      <p-select
+        inputId="raum-etage"
+        [options]="floors"
+        [ngModel]="draft().floor"
+        (ngModelChange)="patch({ floor: $event })"
+        placeholder="Etage wählen"
+        appendTo="body"
+        styleClass="w-full"
+      />
+      @if (submitted() && !draft().floor) {
+        <small class="field__error"><i class="pi pi-exclamation-circle" aria-hidden="true"></i> Bitte wählen Sie eine Etage.</small>
+      }
+    </div>
+
+    <div class="field">
+      <label for="raum-kapazitaet">Kapazität</label>
+      <p-inputnumber
+        inputId="raum-kapazitaet"
+        [ngModel]="draft().capacity"
+        (ngModelChange)="patch({ capacity: $event })"
+        [min]="1"
+        [max]="200"
+        [showButtons]="true"
+        suffix=" Personen"
+        styleClass="w-full"
+      />
+      @if (submitted() && !draft().capacity) {
+        <small class="field__error"><i class="pi pi-exclamation-circle" aria-hidden="true"></i> Bitte geben Sie die Kapazität an.</small>
+      }
+    </div>
+  </div>
+
+  <div class="field">
+    <label for="raum-ausstattung">Ausstattung</label>
+    <p-multiselect
+      inputId="raum-ausstattung"
+      [options]="equipmentOptions"
+      [ngModel]="draft().equipment"
+      (ngModelChange)="patch({ equipment: $event })"
+      placeholder="Nichts ausgewählt"
+      selectedItemsLabel="{0} ausgewählt"
+      appendTo="body"
+      styleClass="w-full"
+    />
+  </div>
+
+  <ng-template #footer>
+    <p-button label="Abbrechen" severity="secondary" [outlined]="true" (onClick)="editingId.set(null)" />
+    <p-button [label]="isNew() ? 'Raum anlegen' : 'Änderungen speichern'" icon="pi pi-check" (onClick)="save()" />
+  </ng-template>
+</p-dialog>
+
+<p-dialog
+  header="Raum löschen?"
+  [visible]="toDelete() !== null"
+  (visibleChange)="!$event && toDelete.set(null)"
+  [modal]="true"
+  [draggable]="false"
+  [style]="{ width: '30rem' }"
+  [breakpoints]="{ '600px': '95vw' }"
+>
+  @if (toDelete(); as r) {
+    <p><strong>Raum {{ r.name }}</strong> · {{ r.floor }} · bis {{ r.capacity }} Personen</p>
+    @if (blockingBookings().length > 0) {
+      <p-message severity="error">
+        Dieser Raum hat noch {{ blockingBookings().length }} künftige
+        {{ blockingBookings().length === 1 ? 'Buchung' : 'Buchungen' }} und kann nicht gelöscht werden.
+        Stornieren Sie die Buchungen zuerst oder sperren Sie den Raum stattdessen.
+      </p-message>
+    } @else {
+      <p>Der Raum wird aus der Auswahl entfernt und kann nicht mehr gebucht werden.</p>
+    }
+  }
+  <ng-template #footer>
+    <p-button label="Abbrechen" severity="secondary" [outlined]="true" (onClick)="toDelete.set(null)" />
+    <p-button label="Ja, löschen" severity="danger" [disabled]="blockingBookings().length > 0" (onClick)="confirmDelete()" />
+  </ng-template>
+</p-dialog>

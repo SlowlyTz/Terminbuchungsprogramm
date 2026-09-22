@@ -65,9 +65,11 @@ function seedBookings(): Booking[] {
 @Injectable({ providedIn: 'root' })
 export class DataService {
   private readonly _bookings = signal<Booking[]>(seedBookings());
+  private readonly _rooms = signal<Room[]>(ROOMS);
   private nextId = 100;
+  private nextRoomId = 100;
 
-  readonly rooms = signal<Room[]>(ROOMS).asReadonly();
+  readonly rooms = this._rooms.asReadonly();
   readonly bookings = this._bookings.asReadonly();
 
   readonly roomById = computed(() => new Map(this.rooms().map((r) => [r.id, r])));
@@ -130,6 +132,36 @@ export class DataService {
 
   cancel(id: number): void {
     this._bookings.update((list) => list.filter((b) => b.id !== id));
+  }
+
+  // --- Rooms ---------------------------------------------------------------
+
+  /** Bookings in this room that have not ended yet; blocks deletion. */
+  futureBookings(roomId: number): Booking[] {
+    const now = Date.now();
+    return this._bookings().filter((b) => b.roomId === roomId && b.end.getTime() >= now);
+  }
+
+  createRoom(room: Omit<Room, 'id'>): Room {
+    const created: Room = { ...room, id: this.nextRoomId++ };
+    this._rooms.update((list) => [...list, created]);
+    return created;
+  }
+
+  updateRoom(id: number, changes: Omit<Room, 'id'>): Room | undefined {
+    let updated: Room | undefined;
+    this._rooms.update((list) =>
+      list.map((r) => {
+        if (r.id !== id) return r;
+        updated = { ...r, ...changes };
+        return updated;
+      }),
+    );
+    return updated;
+  }
+
+  deleteRoom(id: number): void {
+    this._rooms.update((list) => list.filter((r) => r.id !== id));
   }
 }
 
