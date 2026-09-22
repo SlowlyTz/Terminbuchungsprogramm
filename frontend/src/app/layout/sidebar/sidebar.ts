@@ -7,6 +7,7 @@ import { DialogModule } from '@openng/optimus-ui/dialog';
 import { MenuModule } from '@openng/optimus-ui/menu';
 
 import { AuthService } from '../../core/auth.service';
+import { BootService } from '../../core/boot.service';
 import { NotificationService } from '../../core/notification.service';
 import { ThemeService } from '../../core/theme.service';
 
@@ -26,6 +27,7 @@ interface NavItem {
 export class Sidebar {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly boot = inject(BootService);
   readonly theme = inject(ThemeService);
   readonly notifications = inject(NotificationService);
 
@@ -72,6 +74,8 @@ export class Sidebar {
   confirmLogout(): void {
     this.logoutOpen.set(false);
     this.auth.logout();
+    // So the next sign-in shows the loading skeleton again.
+    this.boot.reset();
     this.router.navigate(['/anmelden']);
   }
 

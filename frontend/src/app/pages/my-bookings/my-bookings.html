@@ -4,10 +4,6 @@
     <p>Alle Reservierungen, die auf Ihren Namen laufen.</p>
   </header>
 
-  @if (notice(); as text) {
-    <p-message severity="success" [closable]="true" (onClose)="notice.set(null)" styleClass="mb">{{ text }}</p-message>
-  }
-
   <p-table [value]="bookings()" [rowHover]="true" responsiveLayout="stack" breakpoint="768px">
     <ng-template #header>
       <tr>
@@ -30,7 +26,18 @@
       </tr>
     </ng-template>
     <ng-template #emptymessage>
-      <tr><td colspan="5">Sie haben derzeit keine Buchungen.</td></tr>
+      <tr>
+        <td colspan="5">
+          <app-empty-state
+            icon="pi pi-calendar"
+            title="Sie haben derzeit keine Buchungen"
+            text="Sobald Sie einen Raum reservieren, erscheint die Buchung hier und kann geändert oder storniert werden."
+            actionLabel="Termin buchen"
+            actionIcon="pi pi-calendar-plus"
+            (action)="book()"
+          />
+        </td>
+      </tr>
     </ng-template>
   </p-table>
 

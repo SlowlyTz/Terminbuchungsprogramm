@@ -71,3 +71,41 @@
   .shell__topbar { display: flex; }
   .shell__main { padding: 1rem; }
 }
+
+.boot-error {
+  display: grid;
+  place-items: center;
+  min-height: 100vh;
+  padding: 1.5rem;
+  background: var(--app-bg);
+}
+
+.boot-error__card {
+  width: 100%;
+  max-width: 30rem;
+  padding: 2.5rem 2rem;
+  border: 1px solid var(--p-content-border-color);
+  border-radius: 1rem;
+  background: var(--p-content-background);
+  text-align: center;
+
+  h1 { font-size: 1.375rem; margin: 1rem 0 0.5rem; }
+  p { margin: 0 0 1rem; color: var(--p-text-muted-color); }
+}
+
+.boot-error__icon {
+  display: inline-grid;
+  place-items: center;
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--p-red-500, #ef4444) 15%, transparent);
+  color: var(--p-red-600, #dc2626);
+  font-size: 1.75rem;
+}
+
+.boot-error__hint {
+  font-size: 0.8125rem;
+  font-style: italic;
+  margin-bottom: 1.5rem;
+}

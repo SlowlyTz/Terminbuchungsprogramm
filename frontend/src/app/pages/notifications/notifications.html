@@ -7,7 +7,12 @@
   <section aria-labelledby="open-heading">
     <h2 id="open-heading">Offene Einladungen ({{ open().length }})</h2>
     @if (open().length === 0) {
-      <p class="empty"><i class="pi pi-check-circle" aria-hidden="true"></i> Keine offenen Einladungen – alles beantwortet.</p>
+      <app-empty-state
+        icon="pi pi-check-circle"
+        title="Alles beantwortet"
+        text="Sie haben keine offenen Einladungen. Neue Einladungen erscheinen hier, sobald jemand Sie zu einem Termin hinzufügt."
+        [compact]="true"
+      />
     }
     <ul class="list">
       @for (i of open(); track i.id) {

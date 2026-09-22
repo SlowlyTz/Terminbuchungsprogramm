@@ -1,28 +1,47 @@
-<a class="skip-link" href="#hauptinhalt">Zum Inhalt springen</a>
+@if (boot.failed()) {
+  <div class="boot-error">
+    <main class="boot-error__card" role="alert">
+      <span class="boot-error__icon" aria-hidden="true"><i class="pi pi-exclamation-triangle"></i></span>
+      <h1>Daten konnten nicht geladen werden</h1>
+      <p>
+        Die Verbindung zum Server ist fehlgeschlagen. Bitte prüfen Sie Ihre Netzwerkverbindung
+        und versuchen Sie es erneut.
+      </p>
+      <p class="boot-error__hint">
+        Im Prototyp wird dieser Zustand über den Schalter „Ladefehler simulieren“ in den Einstellungen ausgelöst.
+      </p>
+      <p-button label="Erneut versuchen" icon="pi pi-refresh" (onClick)="boot.retry()" />
+    </main>
+  </div>
+} @else if (!boot.ready()) {
+  <app-app-skeleton />
+} @else {
+  <a class="skip-link" href="#hauptinhalt">Zum Inhalt springen</a>
 
-<div class="shell">
-  <aside class="shell__sidebar" aria-label="Hauptnavigation">
-    <app-sidebar />
-  </aside>
+  <div class="shell">
+    <aside class="shell__sidebar" aria-label="Hauptnavigation">
+      <app-sidebar />
+    </aside>
 
-  <header class="shell__topbar">
-    <p-button
-      icon="pi pi-bars"
-      [text]="true"
-      severity="secondary"
-      ariaLabel="Menü öffnen"
-      (onClick)="drawerOpen.set(true)"
-    />
-    <span class="shell__brand">Raumbuchung</span>
-  </header>
+    <header class="shell__topbar">
+      <p-button
+        icon="pi pi-bars"
+        [text]="true"
+        severity="secondary"
+        ariaLabel="Menü öffnen"
+        (onClick)="drawerOpen.set(true)"
+      />
+      <span class="shell__brand">Raumbuchung</span>
+    </header>
 
-  <p-drawer [(visible)]="drawerOpen" position="left" [modal]="true" styleClass="shell__drawer" ariaCloseLabel="Menü schließen">
-    <ng-template #headless>
-      <app-sidebar [showClose]="true" (close)="drawerOpen.set(false)" />
-    </ng-template>
-  </p-drawer>
+    <p-drawer [(visible)]="drawerOpen" position="left" [modal]="true" styleClass="shell__drawer" ariaCloseLabel="Menü schließen">
+      <ng-template #headless>
+        <app-sidebar [showClose]="true" (close)="drawerOpen.set(false)" />
+      </ng-template>
+    </p-drawer>
 
-  <main id="hauptinhalt" class="shell__main" tabindex="-1">
-    <router-outlet />
-  </main>
-</div>
+    <main id="hauptinhalt" class="shell__main" tabindex="-1">
+      <router-outlet />
+    </main>
+  </div>
+}
