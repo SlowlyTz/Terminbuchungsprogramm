@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 
-export const routes: Routes = [
+/** Pages inside the application shell (sidebar, topbar, drawer). */
+const shellRoutes: Routes = [
   { path: '', title: 'Start – Raumbuchung', loadComponent: () => import('./pages/dashboard/dashboard').then((m) => m.Dashboard) },
   { path: 'buchen', title: 'Termin buchen – Raumbuchung', loadComponent: () => import('./pages/booking/booking').then((m) => m.Booking) },
   { path: 'meine-buchungen', title: 'Meine Buchungen – Raumbuchung', loadComponent: () => import('./pages/my-bookings/my-bookings').then((m) => m.MyBookings) },
@@ -17,6 +18,14 @@ export const routes: Routes = [
       { path: 'benutzer/neu', title: 'Neuer Benutzer – Raumbuchung', loadComponent: () => import('./pages/admin/admin-user-new').then((m) => m.AdminUserNew) },
       { path: 'audit', title: 'Audit-Log – Raumbuchung', loadComponent: () => import('./pages/admin/admin-audit').then((m) => m.AdminAudit) },
     ],
+  },
+];
+
+export const routes: Routes = [
+  {
+    path: '',
+    loadComponent: () => import('./layout/shell/shell').then((m) => m.Shell),
+    children: shellRoutes,
   },
   { path: '**', redirectTo: '' },
 ];
