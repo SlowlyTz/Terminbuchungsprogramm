@@ -16,6 +16,9 @@ export type LoginResult = 'ok' | 'wrong-credentials' | 'account-locked' | 'too-m
 
 const SIGNED_OUT: User = { id: 0, name: '', role: '', isAdmin: false, avatarUrl: null };
 
+/** Mock only: stands in for the session cookie, so a reload does not sign you out. */
+const SESSION_KEY = 'raumbuchung.session';
+
 function describe(account: AdminUser): User {
   return {
     id: account.id,
@@ -38,6 +41,16 @@ export class AuthService {
   readonly user = this._user.asReadonly();
   readonly signedIn = this._signedIn.asReadonly();
   readonly attempts = this._attempts.asReadonly();
+
+  constructor() {
+    // Restore the session after a reload, the way a session cookie would.
+    const id = storedSession();
+    const account = id === null ? undefined : this.admin.users().find((u) => u.id === id);
+    if (account?.active) {
+      this._user.set(describe(account));
+      this._signedIn.set(true);
+    }
+  }
 
   readonly lockedOut = computed(() => this._attempts() >= MAX_ATTEMPTS);
   readonly remainingAttempts = computed(() => Math.max(0, MAX_ATTEMPTS - this._attempts()));
@@ -73,6 +86,7 @@ export class AuthService {
     this._attempts.set(0);
     this._user.set(describe(account));
     this._signedIn.set(true);
+    storeSession(account.id);
     this.admin.log(this._user().name, 'login', 'Anmeldung über die Weboberfläche');
     return 'ok';
   }
@@ -81,9 +95,28 @@ export class AuthService {
     if (this._signedIn()) this.admin.log(this._user().name, 'logout', '');
     this._signedIn.set(false);
     this._user.set(SIGNED_OUT);
+    storeSession(null);
   }
 
   setAdmin(isAdmin: boolean): void {
     this._user.update((u) => ({ ...u, isAdmin, role: `${isAdmin ? 'Administrator' : 'Mitarbeitende:r'}, ${u.role.split(', ')[1] ?? 'IT'}` }));
+  }
+}
+
+function storedSession(): number | null {
+  try {
+    const raw = sessionStorage.getItem(SESSION_KEY);
+    return raw === null ? null : Number(raw);
+  } catch {
+    return null;
+  }
+}
+
+function storeSession(id: number | null): void {
+  try {
+    if (id === null) sessionStorage.removeItem(SESSION_KEY);
+    else sessionStorage.setItem(SESSION_KEY, String(id));
+  } catch {
+    // Storage may be unavailable; the session then ends with the reload.
   }
 }
