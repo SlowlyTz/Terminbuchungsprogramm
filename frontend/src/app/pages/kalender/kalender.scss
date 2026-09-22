@@ -37,7 +37,7 @@
 
 .calendar__nav { display: flex; gap: 0.5rem; flex-wrap: wrap; }
 
-.calendar__hint { margin: 0.25rem 0 0.75rem; color: var(--p-text-muted-color); }
+.calendar__hint { display: block; margin: 0.25rem 0 1rem; }
 
 .form__date {
   margin: 0 0 1rem;
