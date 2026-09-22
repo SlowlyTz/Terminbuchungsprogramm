@@ -1,7 +1,7 @@
 <div class="page">
   <header class="page-header">
     <h1>Meine Buchungen</h1>
-    <p>Alle Reservierungen, die auf Ihren Namen laufen.</p>
+    <p>Alle Reservierungen, die auf Ihren Namen laufen. Zeile anklicken, um Details zu sehen.</p>
   </header>
 
   <p-table [value]="bookings()" [rowHover]="true" responsiveLayout="stack" breakpoint="768px">
@@ -11,23 +11,44 @@
         <th scope="col">Uhrzeit</th>
         <th scope="col">Raum</th>
         <th scope="col">Titel</th>
+        <th scope="col">Teilnehmer</th>
         <th scope="col"><span class="visually-hidden">Aktionen</span></th>
       </tr>
     </ng-template>
     <ng-template #body let-b>
-      <tr>
-        <td>{{ b.start | date: 'EEEE, d. MMMM y' }}</td>
+      <tr class="row" [class.is-past]="isPast(b)">
+        <td>
+          <button type="button" class="row__open" (click)="detail.set(b)" [attr.aria-label]="'Details zu ' + b.title + ' anzeigen'">
+            {{ b.start | date: 'EEEE, d. MMMM y' }}
+          </button>
+        </td>
         <td>{{ b.start | date: 'HH:mm' }}–{{ b.end | date: 'HH:mm' }} Uhr</td>
         <td>{{ roomName(b.roomId) }}</td>
-        <td>{{ b.title }}</td>
+        <td>
+          {{ b.title }}
+          @if (isPast(b)) {
+            <p-tag value="vergangen" severity="secondary" />
+          }
+        </td>
+        <td>
+          @if (b.invitees.length === 0) {
+            <span class="muted">—</span>
+          } @else {
+            <span class="muted">{{ b.invitees.length }} eingeladen</span>
+          }
+        </td>
         <td class="actions">
-          <p-button label="Buchung stornieren" icon="pi pi-trash" severity="danger" [outlined]="true" size="small" (onClick)="toCancel.set(b)" />
+          <p-button label="Details" icon="pi pi-eye" severity="secondary" [outlined]="true" size="small" (onClick)="detail.set(b)" />
+          @if (!isPast(b)) {
+            <p-button label="Bearbeiten" icon="pi pi-pencil" severity="secondary" [outlined]="true" size="small" (onClick)="editing.set(b)" />
+            <p-button label="Stornieren" icon="pi pi-trash" severity="danger" [outlined]="true" size="small" (onClick)="toCancel.set(b)" />
+          }
         </td>
       </tr>
     </ng-template>
     <ng-template #emptymessage>
       <tr>
-        <td colspan="5">
+        <td colspan="6">
           <app-empty-state
             icon="pi pi-calendar"
             title="Sie haben derzeit keine Buchungen"
@@ -41,12 +62,25 @@
     </ng-template>
   </p-table>
 
+  <app-booking-detail
+    [booking]="detail()"
+    [showActions]="true"
+    (close)="detail.set(null)"
+    (edit)="startEdit($event)"
+    (cancel)="askCancel($event)"
+  />
+
+  <app-booking-edit [booking]="editing()" (close)="editing.set(null)" (saved)="onSaved($event)" />
+
   <p-dialog header="Buchung stornieren?" [visible]="toCancel() !== null" (visibleChange)="!$event && toCancel.set(null)" [modal]="true" [draggable]="false" [style]="{ width: '30rem' }" [breakpoints]="{ '600px': '95vw' }">
     @if (toCancel(); as b) {
       <p>
         <strong>{{ b.title }}</strong><br>
         Raum {{ roomName(b.roomId) }}, {{ b.start | date: 'EEE d.MM.' }}, {{ b.start | date: 'HH:mm' }}–{{ b.end | date: 'HH:mm' }} Uhr
       </p>
+      @if (b.invitees.length > 0) {
+        <p>{{ b.invitees.length }} eingeladene {{ b.invitees.length === 1 ? 'Person wird' : 'Personen werden' }} über die Absage informiert.</p>
+      }
       <p>Die Reservierung wird gelöscht und der Raum wieder freigegeben.</p>
     }
     <ng-template #footer>

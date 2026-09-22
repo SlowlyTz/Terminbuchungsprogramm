@@ -1,0 +1,72 @@
+<p-dialog
+  [header]="'Buchung in Raum ' + roomName() + ' bearbeiten'"
+  [visible]="open()"
+  (visibleChange)="onVisibleChange($event)"
+  [modal]="true"
+  [draggable]="false"
+  [style]="{ width: '36rem' }"
+  [breakpoints]="{ '640px': '95vw' }"
+>
+  @if (booking(); as b) {
+    @if (draft(); as d) {
+      <p class="edit__date"><i class="pi pi-calendar" aria-hidden="true"></i> {{ b.start | date: 'EEEE, d. MMMM y' }}</p>
+
+      <div class="edit__row">
+        <div class="field">
+          <label for="edit-von">Von</label>
+          <input pInputText id="edit-von" type="time" step="900" [ngModel]="d.startTime" (ngModelChange)="patch({ startTime: $event })" required>
+        </div>
+        <div class="field">
+          <label for="edit-bis">Bis</label>
+          <input pInputText id="edit-bis" type="time" step="900" [ngModel]="d.endTime" (ngModelChange)="patch({ endTime: $event })" required>
+        </div>
+      </div>
+
+      @if (invalid()) {
+        <p-message severity="warn">Die Endzeit muss nach der Startzeit liegen.</p-message>
+      }
+      @if (conflict(); as c) {
+        <p-message severity="error">
+          Dieser Zeitraum ist bereits belegt: „{{ c.title }}“ von {{ c.start | date: 'HH:mm' }} bis {{ c.end | date: 'HH:mm' }} Uhr ({{ c.userName }}). Bitte eine andere Zeit wählen.
+        </p-message>
+      }
+
+      <div class="field">
+        <label for="edit-titel">Titel der Besprechung</label>
+        <input pInputText id="edit-titel" [ngModel]="d.title" (ngModelChange)="patch({ title: $event })" placeholder="z. B. Monatsabschluss">
+      </div>
+
+      <div class="field">
+        <label for="edit-teilnehmer">Teilnehmer</label>
+        <p-autocomplete
+          inputId="edit-teilnehmer"
+          [ngModel]="d.invitees"
+          (ngModelChange)="patch({ invitees: $event })"
+          [suggestions]="suggestions()"
+          (completeMethod)="searchInvitees($event)"
+          optionLabel="name"
+          [multiple]="true"
+          [dropdown]="true"
+          [forceSelection]="true"
+          [minLength]="1"
+          placeholder="Name eingeben …"
+          appendTo="body"
+          styleClass="w-full"
+        >
+          <ng-template #item let-i>
+            <div class="invitee-option">
+              <span>{{ i.name }}</span>
+              <span class="invitee-option__meta">{{ i.department }}</span>
+            </div>
+          </ng-template>
+        </p-autocomplete>
+        <small class="hint">Neu hinzugefügte Personen erhalten eine Einladung, entfernte eine Absage.</small>
+      </div>
+    }
+  }
+
+  <ng-template #footer>
+    <p-button label="Abbrechen" severity="secondary" [outlined]="true" (onClick)="close.emit()" />
+    <p-button label="Änderungen speichern" icon="pi pi-check" [disabled]="invalid() || unchanged()" (onClick)="save()" />
+  </ng-template>
+</p-dialog>

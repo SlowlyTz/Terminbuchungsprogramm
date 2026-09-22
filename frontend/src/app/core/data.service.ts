@@ -91,9 +91,12 @@ export class DataService {
     return this.bookingsForUser(userId).at(-1);
   }
 
-  /** Returns the booking that overlaps the requested range, if any. */
-  findConflict(roomId: number, start: Date, end: Date): Booking | undefined {
-    return this._bookings().find((b) => b.roomId === roomId && b.start < end && b.end > start);
+  /**
+   * Returns the booking that overlaps the requested range, if any.
+   * `ignoreId` skips one booking, so editing it does not collide with itself.
+   */
+  findConflict(roomId: number, start: Date, end: Date, ignoreId?: number): Booking | undefined {
+    return this._bookings().find((b) => b.id !== ignoreId && b.roomId === roomId && b.start < end && b.end > start);
   }
 
   create(draft: BookingDraft, userId: number, userName: string): Booking {
@@ -111,6 +114,18 @@ export class DataService {
     };
     this._bookings.update((list) => [...list, booking]);
     return booking;
+  }
+
+  update(id: number, changes: Pick<Booking, 'start' | 'end' | 'title' | 'invitees'>): Booking | undefined {
+    let updated: Booking | undefined;
+    this._bookings.update((list) =>
+      list.map((b) => {
+        if (b.id !== id) return b;
+        updated = { ...b, ...changes, title: changes.title.trim() || 'Besprechung' };
+        return updated;
+      }),
+    );
+    return updated;
   }
 
   cancel(id: number): void {

@@ -1,16 +1,18 @@
 import { DatePipe } from '@angular/common';
-import { Component, computed, inject } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { ButtonModule } from '@openng/optimus-ui/button';
 import { CardModule } from '@openng/optimus-ui/card';
 
 import { AuthService } from '../../core/auth.service';
 import { DataService } from '../../core/data.service';
+import { Booking } from '../../core/models';
 import { NotificationService } from '../../core/notification.service';
+import { BookingDetail } from '../../shared/booking-detail/booking-detail';
 
 @Component({
   selector: 'app-dashboard',
-  imports: [DatePipe, RouterLink, ButtonModule, CardModule],
+  imports: [DatePipe, RouterLink, ButtonModule, CardModule, BookingDetail],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.scss',
 })
@@ -20,16 +22,20 @@ export class Dashboard {
   private readonly router = inject(Router);
   private readonly notifications = inject(NotificationService);
 
+  readonly detail = signal<Booking | null>(null);
+
   readonly firstName = computed(() => this.auth.user().name.split(' ')[0]);
   readonly unread = this.notifications.unreadCount;
   /** Own bookings plus accepted invitations, next three by start time. */
   readonly upcoming = computed(() => {
     const now = Date.now();
-    const own = this.data.upcomingForUser(this.auth.user().id, 10).map((b) => ({ id: 'b' + b.id, title: b.title, roomId: b.roomId, start: b.start, end: b.end, host: null as string | null }));
+    const own = this.data
+      .upcomingForUser(this.auth.user().id, 10)
+      .map((b) => ({ id: 'b' + b.id, title: b.title, roomId: b.roomId, start: b.start, end: b.end, host: null as string | null, booking: b as Booking | null }));
     const invited = this.notifications
       .accepted()
       .filter((i) => i.end.getTime() >= now)
-      .map((i) => ({ id: 'i' + i.id, title: i.title, roomId: i.roomId, start: i.start, end: i.end, host: i.fromName }));
+      .map((i) => ({ id: 'i' + i.id, title: i.title, roomId: i.roomId, start: i.start, end: i.end, host: i.fromName, booking: null as Booking | null }));
     return [...own, ...invited].sort((a, b) => a.start.getTime() - b.start.getTime()).slice(0, 4);
   });
   readonly lastBooking = computed(() => this.data.lastBookingOfUser(this.auth.user().id));

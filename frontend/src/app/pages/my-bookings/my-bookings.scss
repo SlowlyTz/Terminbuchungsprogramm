@@ -1,0 +1,25 @@
+.actions {
+  display: flex;
+  gap: 0.375rem;
+  flex-wrap: wrap;
+}
+
+.muted { color: var(--p-text-muted-color); }
+
+.row.is-past {
+  color: var(--p-text-muted-color);
+}
+
+// The date doubles as the link into the details, so the whole row feels clickable.
+.row__open {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+
+  &:hover { text-decoration: underline; }
+}
