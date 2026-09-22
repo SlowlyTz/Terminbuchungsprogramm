@@ -1,0 +1,122 @@
+<div class="auth">
+  <p-button
+    class="auth__theme"
+    [icon]="theme.dark() ? 'pi pi-sun' : 'pi pi-moon'"
+    [text]="true"
+    severity="secondary"
+    [ariaLabel]="theme.dark() ? 'Heller Modus' : 'Dunkler Modus'"
+    (onClick)="theme.toggle()"
+  />
+
+  <main class="auth__card">
+    <div class="auth__brand">
+      <span class="auth__logo" aria-hidden="true"><i class="pi pi-calendar"></i></span>
+      <h1>Raumbuchung</h1>
+      <p>Bitte melden Sie sich mit Ihrem Firmenkonto an.</p>
+    </div>
+
+    <!-- Announced as soon as it appears, so a failed attempt is not silent for screen readers. -->
+    <div aria-live="assertive">
+      @if (errorText(); as text) {
+        <p-message severity="error" icon="pi pi-exclamation-circle" styleClass="auth__message">{{ text }}</p-message>
+      }
+      @if (showAttemptWarning()) {
+        <p-message severity="warn" icon="pi pi-lock" styleClass="auth__message">
+          Noch {{ remainingAttempts() }} {{ remainingAttempts() === 1 ? 'Versuch' : 'Versuche' }}, danach wird das Konto gesperrt.
+        </p-message>
+      }
+    </div>
+
+    <form class="auth__form" (ngSubmit)="submit()" novalidate>
+      <div class="field">
+        <label for="email">E-Mail-Adresse</label>
+        <input
+          pInputText
+          id="email"
+          type="email"
+          name="email"
+          autocomplete="username"
+          placeholder="vorname.nachname@firma.de"
+          [ngModel]="email()"
+          (ngModelChange)="email.set($event)"
+          [disabled]="lockedOut() || busy()"
+          [attr.aria-invalid]="emailInvalid() ? 'true' : null"
+          [attr.aria-describedby]="emailInvalid() ? 'email-fehler' : null"
+        >
+        @if (emailInvalid()) {
+          <small id="email-fehler" class="field__error">
+            <i class="pi pi-exclamation-circle" aria-hidden="true"></i>
+            {{ emailMissing() ? 'Bitte geben Sie Ihre E-Mail-Adresse ein.' : 'Das ist keine gültige E-Mail-Adresse.' }}
+          </small>
+        }
+      </div>
+
+      <div class="field">
+        <label for="passwort">Passwort</label>
+        <p-password
+          inputId="passwort"
+          name="passwort"
+          autocomplete="current-password"
+          placeholder="Passwort eingeben"
+          [ngModel]="password()"
+          (ngModelChange)="password.set($event)"
+          [feedback]="false"
+          [toggleMask]="true"
+          [disabled]="lockedOut() || busy()"
+          styleClass="w-full"
+          inputStyleClass="w-full"
+        />
+        @if (passwordMissing()) {
+          <small class="field__error">
+            <i class="pi pi-exclamation-circle" aria-hidden="true"></i>
+            Bitte geben Sie Ihr Passwort ein.
+          </small>
+        }
+      </div>
+
+      <div class="auth__row">
+        <div class="auth__remember">
+          <p-checkbox
+            inputId="merken"
+            [binary]="true"
+            [ngModel]="remember()"
+            (ngModelChange)="remember.set($event)"
+            name="merken"
+            [disabled]="lockedOut() || busy()"
+          />
+          <label for="merken">Angemeldet bleiben</label>
+        </div>
+        <a routerLink="/passwort-vergessen">Passwort vergessen?</a>
+      </div>
+
+      <p-button
+        type="submit"
+        [label]="busy() ? 'Anmelden …' : 'Anmelden'"
+        icon="pi pi-sign-in"
+        [loading]="busy()"
+        [disabled]="lockedOut()"
+        size="large"
+        styleClass="w-full"
+      />
+    </form>
+
+    <section class="auth__demo" aria-labelledby="demo-heading">
+      <h2 id="demo-heading"><i class="pi pi-info-circle" aria-hidden="true"></i> Zugänge für die Vorführung</h2>
+      <p>Passwort für alle Konten: <code>{{ demoPassword }}</code></p>
+      <ul>
+        <li>
+          <button type="button" (click)="useDemoAccount('felix.brandt@firma.de')">felix.brandt&#64;firma.de</button>
+          <span>Administrator</span>
+        </li>
+        <li>
+          <button type="button" (click)="useDemoAccount('harald.weizmann@firma.de')">harald.weizmann&#64;firma.de</button>
+          <span>Nutzer</span>
+        </li>
+        <li>
+          <button type="button" (click)="useDemoAccount('jonas.pfeiffer@firma.de')">jonas.pfeiffer&#64;firma.de</button>
+          <span>gesperrtes Konto</span>
+        </li>
+      </ul>
+    </section>
+  </main>
+</div>

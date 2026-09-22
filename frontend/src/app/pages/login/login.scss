@@ -1,0 +1,49 @@
+@use '../auth';
+
+.auth__form .field:last-of-type { margin-bottom: 0.75rem; }
+
+.auth__demo {
+  margin-top: 1.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--p-content-border-color);
+  font-size: 0.875rem;
+
+  h2 {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    color: var(--p-text-muted-color);
+  }
+
+  p { margin: 0 0 0.5rem; color: var(--p-text-muted-color); }
+
+  code {
+    padding: 0.125rem 0.375rem;
+    border-radius: 0.25rem;
+    background: var(--app-surface-muted);
+    font-weight: 700;
+  }
+
+  ul { list-style: none; margin: 0; padding: 0; }
+
+  li {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.125rem 0;
+  }
+
+  button {
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--p-primary-color);
+    font: inherit;
+    text-decoration: underline;
+    cursor: pointer;
+  }
+
+  span { color: var(--p-text-muted-color); }
+}

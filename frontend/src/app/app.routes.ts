@@ -1,5 +1,7 @@
 import { Routes } from '@angular/router';
 
+import { adminGuard, authGuard } from './core/auth.guard';
+
 /** Pages inside the application shell (sidebar, topbar, drawer). */
 const shellRoutes: Routes = [
   { path: '', title: 'Start – Raumbuchung', loadComponent: () => import('./pages/dashboard/dashboard').then((m) => m.Dashboard) },
@@ -10,6 +12,7 @@ const shellRoutes: Routes = [
   { path: 'einstellungen', title: 'Einstellungen – Raumbuchung', loadComponent: () => import('./pages/settings/settings').then((m) => m.Settings) },
   {
     path: 'verwaltung',
+    canActivate: [adminGuard],
     loadComponent: () => import('./pages/admin/admin').then((m) => m.Admin),
     children: [
       { path: '', pathMatch: 'full', redirectTo: 'raeume' },
@@ -22,8 +25,15 @@ const shellRoutes: Routes = [
 ];
 
 export const routes: Routes = [
+  { path: 'anmelden', title: 'Anmelden – Raumbuchung', loadComponent: () => import('./pages/login/login').then((m) => m.Login) },
+  {
+    path: 'passwort-vergessen',
+    title: 'Passwort vergessen – Raumbuchung',
+    loadComponent: () => import('./pages/password-reset/password-reset').then((m) => m.PasswordReset),
+  },
   {
     path: '',
+    canActivate: [authGuard],
     loadComponent: () => import('./layout/shell/shell').then((m) => m.Shell),
     children: shellRoutes,
   },

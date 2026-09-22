@@ -1,8 +1,9 @@
 import { Component, computed, inject, input, output, signal } from '@angular/core';
-import { RouterLink, RouterLinkActive } from '@angular/router';
+import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { MenuItem } from '@openng/optimus-ui/api';
 import { AvatarModule } from '@openng/optimus-ui/avatar';
 import { ButtonModule } from '@openng/optimus-ui/button';
+import { DialogModule } from '@openng/optimus-ui/dialog';
 import { MenuModule } from '@openng/optimus-ui/menu';
 
 import { AuthService } from '../../core/auth.service';
@@ -18,12 +19,13 @@ interface NavItem {
 
 @Component({
   selector: 'app-sidebar',
-  imports: [RouterLink, RouterLinkActive, AvatarModule, ButtonModule, MenuModule],
+  imports: [RouterLink, RouterLinkActive, AvatarModule, ButtonModule, DialogModule, MenuModule],
   templateUrl: './sidebar.html',
   styleUrl: './sidebar.scss',
 })
 export class Sidebar {
   private readonly auth = inject(AuthService);
+  private readonly router = inject(Router);
   readonly theme = inject(ThemeService);
   readonly notifications = inject(NotificationService);
 
@@ -35,6 +37,7 @@ export class Sidebar {
 
   /** Drives the icon animation; toggled on every theme switch. */
   readonly themeSpin = signal(false);
+  readonly logoutOpen = signal(false);
 
   readonly nav: NavItem[] = [
     { label: 'Start', icon: 'pi pi-home', link: '/', exact: true },
@@ -56,7 +59,7 @@ export class Sidebar {
       command: () => this.toggleTheme(),
     },
     { separator: true },
-    { label: 'Abmelden', icon: 'pi pi-sign-out', command: () => alert('Abmelden folgt mit der Anmeldung im Backend.') },
+    { label: 'Abmelden', icon: 'pi pi-sign-out', command: () => this.logoutOpen.set(true) },
   ]);
 
   /** Called from the custom item template; keeps the menu open by swallowing the menu's own click handling. */
@@ -64,6 +67,12 @@ export class Sidebar {
     event.preventDefault();
     event.stopPropagation();
     this.toggleTheme();
+  }
+
+  confirmLogout(): void {
+    this.logoutOpen.set(false);
+    this.auth.logout();
+    this.router.navigate(['/anmelden']);
   }
 
   toggleTheme(): void {

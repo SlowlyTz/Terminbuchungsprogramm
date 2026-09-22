@@ -88,7 +88,8 @@ export class AdminDataService {
     return created;
   }
 
-  private log(userName: string, action: AuditEntry['action'], details: string): void {
+  /** Appends an entry to the audit log; callers pass the acting user by name. */
+  log(userName: string, action: AuditEntry['action'], details: string): void {
     this._audit.update((list) => [{ id: this.nextAuditId++, at: new Date(), userName, action, details }, ...list]);
   }
 }

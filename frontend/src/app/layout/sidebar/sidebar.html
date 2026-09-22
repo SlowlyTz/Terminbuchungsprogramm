@@ -80,3 +80,19 @@
     </p-menu>
   </div>
 </div>
+
+<p-dialog
+  header="Abmelden?"
+  [visible]="logoutOpen()"
+  (visibleChange)="logoutOpen.set($event)"
+  [modal]="true"
+  [draggable]="false"
+  [style]="{ width: '26rem' }"
+  [breakpoints]="{ '600px': '95vw' }"
+>
+  <p>Sie werden abgemeldet und kehren zur Anmeldung zurück. Nicht abgeschickte Eingaben gehen verloren.</p>
+  <ng-template #footer>
+    <p-button label="Angemeldet bleiben" severity="secondary" [outlined]="true" (onClick)="logoutOpen.set(false)" />
+    <p-button label="Abmelden" icon="pi pi-sign-out" (onClick)="confirmLogout()" />
+  </ng-template>
+</p-dialog>
