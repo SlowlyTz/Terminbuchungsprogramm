@@ -82,3 +82,25 @@
 }
 
 p-message { display: block; margin-bottom: 1rem; }
+
+.filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  align-items: end;
+  gap: 0 1rem;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  border: 1px solid var(--p-content-border-color);
+  border-radius: 0.5rem;
+  background: var(--app-surface-muted);
+}
+
+.filters__summary {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+  color: var(--p-text-muted-color);
+  font-size: 0.9375rem;
+}

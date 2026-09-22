@@ -36,13 +36,13 @@ export class Dashboard {
   readonly roomName = (id: number) => this.data.roomById().get(id)?.name ?? '';
 
   book(): void {
-    this.router.navigate(['/buchen']);
+    this.router.navigate(['/kalender']);
   }
 
   repeatLast(): void {
     const last = this.lastBooking();
     if (last) {
-      this.router.navigate(['/buchen'], { queryParams: { raum: last.roomId, vorlage: last.id } });
+      this.router.navigate(['/kalender'], { queryParams: { raum: last.roomId, vorlage: last.id } });
     }
   }
 }

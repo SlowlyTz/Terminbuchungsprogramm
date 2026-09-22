@@ -1,36 +1,102 @@
 <div class="page">
   <header class="page-header">
-    <h1>Termin buchen</h1>
-    <p>Wählen Sie zuerst den Raum. Danach sehen Sie im Kalender, wann er frei ist.</p>
+    <h1>Kalender</h1>
+    <p>Raum auswählen und sehen, wer ihn wann belegt hat. Auf eine freie Zeit klicken, um zu buchen.</p>
   </header>
 
   <section class="room-pick" aria-labelledby="room-heading">
     <h2 id="room-heading">Welcher Raum?</h2>
-    <div class="field">
-      <label for="raum">Raum suchen oder auswählen</label>
-      <p-select
-        inputId="raum"
-        [options]="rooms()"
-        optionLabel="name"
-        [ngModel]="room()"
-        (ngModelChange)="onRoomChange($event)"
-        [filter]="true"
-        filterBy="name"
-        filterPlaceholder="Raumname eingeben …"
-        placeholder="Raum auswählen"
-        [showClear]="true"
-        [autofocusFilter]="true"
-        appendTo="body"
-        styleClass="room-select"
-      >
-        <ng-template #item let-r>
-          <div class="room-option">
-            <span class="room-option__name">{{ r.name }}</span>
-            <span class="room-option__meta">{{ r.floor }} · bis {{ r.capacity }} Personen · {{ r.equipment.join(', ') }}</span>
-          </div>
-        </ng-template>
-      </p-select>
+
+    <div class="filters">
+      <div class="field">
+        <label for="ausstattung">Ausstattung</label>
+        <p-multiselect
+          inputId="ausstattung"
+          [options]="equipmentOptions()"
+          [ngModel]="equipmentFilter()"
+          (ngModelChange)="equipmentFilter.set($event)"
+          placeholder="Beliebig"
+          selectedItemsLabel="{0} ausgewählt"
+          [showToggleAll]="false"
+          appendTo="body"
+          styleClass="w-full"
+        />
+      </div>
+
+      <div class="field">
+        <label for="kapazitaet">Mindestgröße</label>
+        <p-select
+          inputId="kapazitaet"
+          [options]="capacityOptions"
+          optionLabel="label"
+          optionValue="value"
+          [ngModel]="minCapacity()"
+          (ngModelChange)="minCapacity.set($event)"
+          appendTo="body"
+          styleClass="w-full"
+        />
+      </div>
+
+      <div class="field">
+        <label for="etage">Etage</label>
+        <p-multiselect
+          inputId="etage"
+          [options]="floorOptions()"
+          [ngModel]="floorFilter()"
+          (ngModelChange)="floorFilter.set($event)"
+          placeholder="Alle Etagen"
+          selectedItemsLabel="{0} ausgewählt"
+          [showToggleAll]="false"
+          appendTo="body"
+          styleClass="w-full"
+        />
+      </div>
+
+      <div class="filters__summary">
+        <span aria-live="polite">{{ rooms().length }} von {{ totalRooms() }} Räumen</span>
+        @if (filterActive()) {
+          <p-button label="Filter zurücksetzen" icon="pi pi-filter-slash" [text]="true" size="small" (onClick)="clearFilters()" />
+        }
+      </div>
     </div>
+
+    @if (rooms().length === 0) {
+      <app-empty-state
+        icon="pi pi-filter-slash"
+        title="Kein Raum passt zu den Filtern"
+        text="Lockern Sie die Auswahl, zum Beispiel bei der Ausstattung oder der Mindestgröße."
+        actionLabel="Filter zurücksetzen"
+        actionIcon="pi pi-filter-slash"
+        [compact]="true"
+        (action)="clearFilters()"
+      />
+    } @else {
+      <div class="field">
+        <label for="raum">Raum suchen oder auswählen</label>
+        <p-select
+          inputId="raum"
+          [options]="rooms()"
+          optionLabel="name"
+          [ngModel]="room()"
+          (ngModelChange)="onRoomChange($event)"
+          [filter]="true"
+          filterBy="name"
+          filterPlaceholder="Raumname eingeben …"
+          placeholder="Raum auswählen"
+          [showClear]="true"
+          [autofocusFilter]="true"
+          appendTo="body"
+          styleClass="room-select"
+        >
+          <ng-template #item let-r>
+            <div class="room-option">
+              <span class="room-option__name">{{ r.name }}</span>
+              <span class="room-option__meta">{{ r.floor }} · bis {{ r.capacity }} Personen · {{ r.equipment.join(', ') }}</span>
+            </div>
+          </ng-template>
+        </p-select>
+      </div>
+    }
 
     @if (room(); as r) {
       <p class="room-info">
@@ -51,7 +117,7 @@
           @if (b.invitees.length > 0) {
             <span>Einladungen gesendet an: {{ inviteeNames(b) }}.</span>
           }
-          <span>Eine Bestätigung wurde per E-Mail gesendet. Sie können die Buchung jederzeit unter <a routerLink="/meine-buchungen">Meine Buchungen</a> stornieren.</span>
+          <span>Eine Bestätigung wurde per E-Mail gesendet. Sie können die Buchung jederzeit unter <a routerLink="/meine-buchungen">Meine Buchungen</a> ändern oder stornieren.</span>
         </div>
       </p-message>
     </div>
@@ -73,16 +139,28 @@
           }
         </div>
       </div>
-      <p class="calendar__hint">Woche vom {{ weekDays()[0] | date: 'd. MMMM' }} bis {{ weekDays()[4] | date: 'd. MMMM y' }}. Klicken Sie auf eine freie Zeit, um dort eine Buchung zu beginnen.</p>
+      <p class="calendar__hint">
+        Woche vom {{ weekDays()[0] | date: 'd. MMMM' }} bis {{ weekDays()[4] | date: 'd. MMMM y' }}.
+        Klicken Sie auf eine freie Zeit, um dort eine Buchung zu beginnen, oder auf einen Eintrag, um zu sehen, wer gebucht hat.
+      </p>
 
       <app-week-calendar
         [days]="visibleDays()"
         [bookings]="roomBookings()"
         [currentUserId]="user().id"
         (slotSelected)="startDraft($event)"
+        (bookingSelected)="detail.set($event)"
       />
     </section>
+  } @else if (rooms().length > 0) {
+    <app-empty-state
+      icon="pi pi-calendar"
+      title="Noch kein Raum ausgewählt"
+      text="Wählen Sie oben einen Raum, dann erscheint hier seine Belegung für die ganze Woche."
+    />
   }
+
+  <app-booking-detail [booking]="detail()" (close)="detail.set(null)" />
 
   <p-dialog
     [header]="step() === 'form' ? 'Neue Buchung in Raum ' + (draft() ? roomName(draft()!.roomId) : '') : 'Buchung bestätigen'"

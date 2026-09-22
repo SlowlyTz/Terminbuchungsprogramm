@@ -28,7 +28,7 @@ export class MyBookings {
   readonly toCancel = signal<Booking | null>(null);
 
   book(): void {
-    this.router.navigate(['/buchen']);
+    this.router.navigate(['/kalender']);
   }
 
   confirmCancel(): void {

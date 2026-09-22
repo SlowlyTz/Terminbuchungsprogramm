@@ -85,6 +85,8 @@ export interface Invitee {
   id: number;
   name: string;
   department: string;
+  /** Reply of the invited person; undefined counts as still open. */
+  status?: InvitationStatus;
 }
 
 export type InvitationStatus = 'open' | 'accepted' | 'declined';

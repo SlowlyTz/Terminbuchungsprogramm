@@ -1,0 +1,78 @@
+<p-dialog
+  header="Termindetails"
+  [visible]="open()"
+  (visibleChange)="onVisibleChange($event)"
+  [modal]="true"
+  [draggable]="false"
+  [style]="{ width: '34rem' }"
+  [breakpoints]="{ '640px': '95vw' }"
+>
+  @if (booking(); as b) {
+    <article class="detail">
+      <header class="detail__head">
+        <h3>{{ b.title }}</h3>
+        <div class="detail__badges">
+          @if (isOwn()) {
+            <p-tag value="Ihre Buchung" severity="info" icon="pi pi-user" />
+          }
+          @if (isPast()) {
+            <p-tag value="vergangen" severity="secondary" icon="pi pi-history" />
+          }
+        </div>
+      </header>
+
+      <dl class="detail__list">
+        <dt><i class="pi pi-calendar" aria-hidden="true"></i> Datum</dt>
+        <dd>{{ b.start | date: 'EEEE, d. MMMM y' }}</dd>
+
+        <dt><i class="pi pi-clock" aria-hidden="true"></i> Uhrzeit</dt>
+        <dd>{{ b.start | date: 'HH:mm' }}–{{ b.end | date: 'HH:mm' }} Uhr</dd>
+
+        <dt><i class="pi pi-building" aria-hidden="true"></i> Raum</dt>
+        <dd>
+          @if (room(); as r) {
+            <strong>{{ r.name }}</strong>
+            <span class="detail__muted">{{ r.floor }} · bis {{ r.capacity }} Personen</span>
+            <span class="detail__tags">
+              @for (e of r.equipment; track e) {
+                <p-tag [value]="e" severity="secondary" />
+              }
+            </span>
+          } @else {
+            Raum nicht mehr vorhanden
+          }
+        </dd>
+
+        <dt><i class="pi pi-user" aria-hidden="true"></i> Gebucht von</dt>
+        <dd>{{ isOwn() ? b.userName + ' (Sie)' : b.userName }}</dd>
+
+        <dt><i class="pi pi-users" aria-hidden="true"></i> Teilnehmer</dt>
+        <dd>
+          @if (b.invitees.length === 0) {
+            <span class="detail__muted">Keine weiteren Teilnehmer eingeladen.</span>
+          } @else {
+            <ul class="detail__invitees">
+              @for (i of b.invitees; track i.id) {
+                <li>
+                  <span class="detail__invitee-name">{{ i.name }}</span>
+                  <span class="detail__muted">{{ i.department }}</span>
+                  <p-tag [value]="statusLabel(i.status)" [icon]="statusIcon(i.status)" [severity]="statusSeverity(i.status)" />
+                </li>
+              }
+            </ul>
+          }
+        </dd>
+      </dl>
+    </article>
+  }
+
+  <ng-template #footer>
+    @if (booking(); as b) {
+      @if (canAct() && !isPast()) {
+        <p-button label="Stornieren" icon="pi pi-trash" severity="danger" [outlined]="true" (onClick)="cancel.emit(b)" />
+        <p-button label="Bearbeiten" icon="pi pi-pencil" (onClick)="edit.emit(b)" />
+      }
+      <p-button label="Schließen" severity="secondary" [outlined]="true" (onClick)="close.emit()" />
+    }
+  </ng-template>
+</p-dialog>

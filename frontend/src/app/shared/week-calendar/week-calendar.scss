@@ -93,6 +93,18 @@
   &:hover:not(:disabled) { background: var(--p-highlight-background); }
   &:focus-visible { outline-offset: -3px; z-index: 2; }
   &.is-booked { cursor: not-allowed; }
+
+  // Past times cannot be booked; the hatching says so without extra text.
+  &.is-past {
+    cursor: not-allowed;
+    background-image: repeating-linear-gradient(
+      135deg,
+      transparent,
+      transparent 5px,
+      var(--app-surface-muted) 5px,
+      var(--app-surface-muted) 10px
+    );
+  }
 }
 
 .cal__booking {
@@ -104,13 +116,20 @@
   gap: 0.125rem;
   padding: 0.25rem 0.375rem;
   overflow: hidden;
+  border: 0;
   border-radius: 0.375rem;
   background: var(--app-booked-bg);
   border-left: 4px solid var(--app-booked-border);
   color: var(--p-text-color);
+  font-family: inherit;
   font-size: 0.8125rem;
   line-height: 1.25;
-  pointer-events: none;
+  text-align: left;
+  cursor: pointer;
+  z-index: 1;
+
+  &:hover { filter: brightness(0.96); }
+  &:focus-visible { outline-offset: -2px; z-index: 3; }
 
   &.is-own {
     background: var(--app-own-bg);

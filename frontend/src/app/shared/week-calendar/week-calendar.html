@@ -28,7 +28,8 @@
               type="button"
               class="cal__slot"
               [class.is-booked]="slot.booked"
-              [disabled]="slot.booked"
+              [class.is-past]="slot.past"
+              [disabled]="slot.booked || slot.past"
               [attr.aria-label]="slot.label"
               (click)="slotSelected.emit(slot.start)"
             ></button>
@@ -36,18 +37,19 @@
         </div>
 
         @for (p of day.bookings; track p.booking.id) {
-          <div
+          <button
+            type="button"
             class="cal__booking"
             [class.is-own]="p.own"
             [style.top.%]="p.top"
             [style.height.%]="p.height"
-            role="note"
-            [attr.aria-label]="'Belegt: ' + p.booking.title + ', ' + (p.booking.start | date: 'HH:mm') + ' bis ' + (p.booking.end | date: 'HH:mm') + ' Uhr, ' + p.booking.userName"
+            [attr.aria-label]="'Belegt: ' + p.booking.title + ', ' + (p.booking.start | date: 'HH:mm') + ' bis ' + (p.booking.end | date: 'HH:mm') + ' Uhr, ' + p.booking.userName + '. Details anzeigen'"
+            (click)="bookingSelected.emit(p.booking)"
           >
             <span class="cal__booking-time">{{ p.booking.start | date: 'HH:mm' }}–{{ p.booking.end | date: 'HH:mm' }}</span>
             <span class="cal__booking-title">{{ p.booking.title }}</span>
             <span class="cal__booking-user">{{ p.own ? 'Sie' : p.booking.userName }}</span>
-          </div>
+          </button>
         }
       </div>
     }

@@ -5,9 +5,11 @@ import { adminGuard, authGuard } from './core/auth.guard';
 /** Pages inside the application shell (sidebar, topbar, drawer). */
 const shellRoutes: Routes = [
   { path: '', title: 'Start – Raumbuchung', loadComponent: () => import('./pages/dashboard/dashboard').then((m) => m.Dashboard) },
-  { path: 'buchen', title: 'Termin buchen – Raumbuchung', loadComponent: () => import('./pages/booking/booking').then((m) => m.Booking) },
+  { path: 'kalender', title: 'Kalender – Raumbuchung', loadComponent: () => import('./pages/kalender/kalender').then((m) => m.Kalender) },
+  // Old links and bookmarks keep working.
+  { path: 'buchen', pathMatch: 'full', redirectTo: 'kalender' },
+  { path: 'raeume', pathMatch: 'full', redirectTo: 'kalender' },
   { path: 'meine-buchungen', title: 'Meine Buchungen – Raumbuchung', loadComponent: () => import('./pages/my-bookings/my-bookings').then((m) => m.MyBookings) },
-  { path: 'raeume', title: 'Räume – Raumbuchung', loadComponent: () => import('./pages/rooms/rooms').then((m) => m.Rooms) },
   { path: 'benachrichtigungen', title: 'Benachrichtigungen – Raumbuchung', loadComponent: () => import('./pages/notifications/notifications').then((m) => m.Notifications) },
   { path: 'einstellungen', title: 'Einstellungen – Raumbuchung', loadComponent: () => import('./pages/settings/settings').then((m) => m.Settings) },
   {

@@ -43,9 +43,8 @@ export class Sidebar {
 
   readonly nav: NavItem[] = [
     { label: 'Start', icon: 'pi pi-home', link: '/', exact: true },
-    { label: 'Termin buchen', icon: 'pi pi-calendar-plus', link: '/buchen' },
+    { label: 'Kalender', icon: 'pi pi-calendar-plus', link: '/kalender' },
     { label: 'Meine Buchungen', icon: 'pi pi-list', link: '/meine-buchungen' },
-    { label: 'Räume', icon: 'pi pi-building', link: '/raeume' },
   ];
 
   // Opens upward automatically: the trigger sits at the bottom of the viewport.

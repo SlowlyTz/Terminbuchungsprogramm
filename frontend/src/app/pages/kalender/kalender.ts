@@ -1,55 +1,110 @@
 import { DatePipe } from '@angular/common';
 import { Component, DestroyRef, computed, effect, inject, input, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { RouterLink } from '@angular/router';
 import { AutoCompleteCompleteEvent, AutoCompleteModule } from '@openng/optimus-ui/autocomplete';
 import { ButtonModule } from '@openng/optimus-ui/button';
 import { DialogModule } from '@openng/optimus-ui/dialog';
 import { InputTextModule } from '@openng/optimus-ui/inputtext';
 import { MessageModule } from '@openng/optimus-ui/message';
+import { MultiSelectModule } from '@openng/optimus-ui/multiselect';
 import { SelectModule } from '@openng/optimus-ui/select';
 import { TagModule } from '@openng/optimus-ui/tag';
 
 import { AdminDataService } from '../../core/admin-data.service';
 import { AuthService } from '../../core/auth.service';
 import { DataService, combine } from '../../core/data.service';
-import { Booking as BookingModel, BookingDraft, Invitee, Room } from '../../core/models';
+import { Booking, BookingDraft, Invitee, Room } from '../../core/models';
+import { Notify } from '../../core/notify.service';
+import { BookingDetail } from '../../shared/booking-detail/booking-detail';
+import { EmptyState } from '../../shared/empty-state/empty-state';
 import { WeekCalendar } from '../../shared/week-calendar/week-calendar';
 
 const MOBILE_QUERY = '(max-width: 767px)';
 
+/** Thresholds for the capacity filter; friendlier than a free number field. */
+const CAPACITY_OPTIONS = [
+  { label: 'Beliebig', value: 0 },
+  { label: 'ab 4 Personen', value: 4 },
+  { label: 'ab 6 Personen', value: 6 },
+  { label: 'ab 8 Personen', value: 8 },
+  { label: 'ab 12 Personen', value: 12 },
+  { label: 'ab 20 Personen', value: 20 },
+];
+
 @Component({
-  selector: 'app-booking',
-  imports: [DatePipe, FormsModule, RouterLink, AutoCompleteModule, ButtonModule, DialogModule, InputTextModule, MessageModule, SelectModule, TagModule, WeekCalendar],
-  templateUrl: './booking.html',
-  styleUrl: './booking.scss',
+  selector: 'app-kalender',
+  imports: [
+    DatePipe,
+    FormsModule,
+    RouterLink,
+    AutoCompleteModule,
+    ButtonModule,
+    DialogModule,
+    InputTextModule,
+    MessageModule,
+    MultiSelectModule,
+    SelectModule,
+    TagModule,
+    BookingDetail,
+    EmptyState,
+    WeekCalendar,
+  ],
+  templateUrl: './kalender.html',
+  styleUrl: './kalender.scss',
 })
-export class Booking {
+export class Kalender {
   private readonly auth = inject(AuthService);
   private readonly data = inject(DataService);
   private readonly admin = inject(AdminDataService);
-  private readonly router = inject(Router);
+  private readonly notify = inject(Notify);
   private readonly destroyRef = inject(DestroyRef);
 
   // Query params bound by the router: ?raum=<id>&vorlage=<bookingId>
   readonly raum = input<string>();
   readonly vorlage = input<string>();
 
-  readonly rooms = this.data.rooms;
   readonly user = this.auth.user;
+  readonly capacityOptions = CAPACITY_OPTIONS;
 
   readonly room = signal<Room | null>(null);
   readonly weekStart = signal(startOfWeek(new Date()));
   readonly dayIndex = signal(weekdayIndex(new Date()));
   readonly isMobile = signal(false);
 
+  // --- Filters -------------------------------------------------------------
+  readonly equipmentFilter = signal<string[]>([]);
+  readonly floorFilter = signal<string[]>([]);
+  readonly minCapacity = signal(0);
+
+  readonly equipmentOptions = computed(() => [...new Set(this.data.rooms().flatMap((r) => r.equipment))].sort());
+  readonly floorOptions = computed(() => [...new Set(this.data.rooms().map((r) => r.floor))].sort());
+
+  readonly rooms = computed(() => {
+    const equipment = this.equipmentFilter();
+    const floors = this.floorFilter();
+    const min = this.minCapacity();
+    return this.data
+      .rooms()
+      .filter((r) => r.capacity >= min)
+      .filter((r) => floors.length === 0 || floors.includes(r.floor))
+      .filter((r) => equipment.length === 0 || equipment.every((e) => r.equipment.includes(e)));
+  });
+
+  readonly totalRooms = computed(() => this.data.rooms().length);
+  readonly filterActive = computed(() => this.equipmentFilter().length > 0 || this.floorFilter().length > 0 || this.minCapacity() > 0);
+
+  // --- Booking dialog ------------------------------------------------------
   readonly draft = signal<BookingDraft | null>(null);
   /** Dialog step: form first, then the summary to confirm. */
   readonly step = signal<'form' | 'review'>('form');
   readonly dialogOpen = computed(() => this.draft() !== null);
   readonly suggestions = signal<Invitee[]>([]);
-  readonly conflict = signal<BookingModel | null>(null);
-  readonly confirmed = signal<BookingModel | null>(null);
+  readonly conflict = signal<Booking | null>(null);
+  readonly confirmed = signal<Booking | null>(null);
+
+  /** Booking shown in the read-only detail dialog. */
+  readonly detail = signal<Booking | null>(null);
 
   readonly weekDays = computed(() => Array.from({ length: 5 }, (_, i) => addDays(this.weekStart(), i)));
   readonly visibleDays = computed(() => (this.isMobile() ? [this.weekDays()[this.dayIndex()]] : this.weekDays()));
@@ -59,7 +114,7 @@ export class Booking {
     return r ? this.data.bookings().filter((b) => b.roomId === r.id) : [];
   });
   readonly roomName = (id: number) => this.data.roomById().get(id)?.name ?? '';
-  readonly inviteeNames = (b: BookingModel) => b.invitees.map((i) => i.name).join(', ');
+  readonly inviteeNames = (b: Booking) => b.invitees.map((i) => i.name).join(', ');
 
   readonly draftStart = computed(() => {
     const d = this.draft();
@@ -84,7 +139,7 @@ export class Booking {
 
     effect(() => {
       const id = Number(this.raum());
-      const preset = this.rooms().find((r) => r.id === id) ?? null;
+      const preset = this.data.rooms().find((r) => r.id === id) ?? null;
       if (preset) this.room.set(preset);
 
       const template = this.data.bookings().find((b) => b.id === Number(this.vorlage()));
@@ -100,6 +155,15 @@ export class Booking {
         this.step.set('form');
       }
     });
+
+    // Keep the selection honest: a room that no longer passes the filters is cleared.
+    effect(() => {
+      const current = this.room();
+      if (current && !this.rooms().some((r) => r.id === current.id)) {
+        this.room.set(null);
+        this.notify.info(`Raum ${current.name} passt nicht mehr zu den Filtern und wurde abgewählt.`);
+      }
+    });
   }
 
   onRoomChange(room: Room | null): void {
@@ -107,6 +171,12 @@ export class Booking {
     this.draft.set(null);
     this.confirmed.set(null);
     this.conflict.set(null);
+  }
+
+  clearFilters(): void {
+    this.equipmentFilter.set([]);
+    this.floorFilter.set([]);
+    this.minCapacity.set(0);
   }
 
   previousWeek(): void { this.weekStart.update((d) => addDays(d, -7)); }
@@ -169,8 +239,10 @@ export class Booking {
     const d = this.draft();
     if (!d) return;
     const booking = this.data.create(d, this.user().id, this.user().name);
+    this.admin.log(this.user().name, 'booking_created', auditDetails(this.roomName(booking.roomId), booking));
     this.draft.set(null);
     this.confirmed.set(booking);
+    this.notify.success(`Raum ${this.roomName(booking.roomId)} ist für Sie reserviert.`, 'Buchung eingetragen');
     queueMicrotask(() => document.getElementById('buchung-bestaetigt')?.focus());
   }
 
@@ -178,6 +250,11 @@ export class Booking {
     this.draft.set(null);
     this.conflict.set(null);
   }
+}
+
+function auditDetails(roomName: string, b: Booking): string {
+  const day = b.start.toLocaleDateString('de-DE', { weekday: 'short', day: '2-digit', month: '2-digit' });
+  return `Raum ${roomName}, ${day} ${toTime(b.start)}–${toTime(b.end)} Uhr`;
 }
 
 function startOfWeek(d: Date): Date {

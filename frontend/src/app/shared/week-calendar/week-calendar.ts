@@ -13,6 +13,7 @@ export interface CalendarDay {
 export interface CalendarSlot {
   start: Date;
   booked: boolean;
+  past: boolean;
   label: string;
 }
 
@@ -39,6 +40,7 @@ export class WeekCalendar {
   readonly hourEnd = input(19);
 
   readonly slotSelected = output<Date>();
+  readonly bookingSelected = output<Booking>();
 
   readonly hours = computed(() => {
     const list: number[] = [];
@@ -59,12 +61,16 @@ export class WeekCalendar {
       const dayBookings = this.bookings().filter((b) => b.start < dayEnd && b.end > dayStart);
 
       const slots: CalendarSlot[] = [];
+      const now = Date.now();
       for (let m = 0; m < dayMinutes; m += SLOT_MINUTES) {
         const start = new Date(dayStart.getTime() + m * 60_000);
         const end = new Date(start.getTime() + SLOT_MINUTES * 60_000);
         const booked = dayBookings.some((b) => b.start < end && b.end > start);
+        // Nothing can be booked in the past, so those slots are not offered either.
+        const past = end.getTime() <= now;
         const time = `${String(start.getHours()).padStart(2, '0')}:${String(start.getMinutes()).padStart(2, '0')}`;
-        slots.push({ start, booked, label: `${fmt.format(start)}, ${time} Uhr – ${booked ? 'belegt' : 'frei, Buchung beginnen'}` });
+        const state = booked ? 'belegt' : past ? 'vergangen' : 'frei, Buchung beginnen';
+        slots.push({ start, booked, past, label: `${fmt.format(start)}, ${time} Uhr – ${state}` });
       }
 
       const placed: PlacedBooking[] = dayBookings.map((b) => {

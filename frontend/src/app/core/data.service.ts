@@ -1,6 +1,6 @@
 import { Injectable, computed, signal } from '@angular/core';
 
-import { Booking, BookingDraft, Room } from './models';
+import { Booking, BookingDraft, Invitee, Room } from './models';
 
 const ROOMS: Room[] = [
   { id: 1, name: 'Kaiserslautern', capacity: 12, floor: 'EG', equipment: ['Beamer', 'Whiteboard'] },
@@ -27,22 +27,32 @@ function mondayOffset(): number {
 function seedBookings(): Booking[] {
   const m = mondayOffset();
   let id = 1;
-  const b = (roomId: number, userId: number, userName: string, title: string, day: number, sh: number, sm: number, eh: number, em: number): Booking => ({
-    id: id++, roomId, userId, userName, title, start: at(m + day, sh, sm), end: at(m + day, eh, em), invitees: [],
+  const b = (roomId: number, userId: number, userName: string, title: string, day: number, sh: number, sm: number, eh: number, em: number, invitees: Invitee[] = []): Booking => ({
+    id: id++, roomId, userId, userName, title, start: at(m + day, sh, sm), end: at(m + day, eh, em), invitees,
   });
   return [
     b(1, 2, 'Harald Weizmann', 'Monatsabschluss Buchhaltung', 1, 10, 0, 12, 0),
     b(1, 1, 'Felix Brandt', 'Daily IT', 0, 9, 0, 9, 30),
     b(1, 1, 'Felix Brandt', 'Daily IT', 1, 9, 0, 9, 30),
-    b(1, 1, 'Felix Brandt', 'Daily IT', 2, 9, 0, 9, 30),
+    b(1, 1, 'Felix Brandt', 'Daily IT', 2, 9, 0, 9, 30, [
+      { id: 8, name: 'Jonas Pfeiffer', department: 'IT', status: 'accepted' },
+      { id: 6, name: 'Murat Demir', department: 'Einkauf', status: 'declined' },
+    ]),
     b(1, 1, 'Felix Brandt', 'Daily IT', 3, 9, 0, 9, 30),
     b(1, 1, 'Felix Brandt', 'Daily IT', 4, 9, 0, 9, 30),
     b(1, 3, 'Sabine Kern', 'Kundengespräch Müller GmbH', 2, 13, 0, 15, 30),
     b(1, 4, 'Tom Reuter', 'Schulung Zeiterfassung', 3, 10, 0, 12, 0),
     b(1, 3, 'Sabine Kern', 'Vertriebsrunde', 4, 14, 0, 16, 0),
-    b(3, 5, 'Geschäftsleitung', 'Quartalsmeeting', 1, 14, 0, 17, 0),
+    b(3, 5, 'Geschäftsleitung', 'Quartalsmeeting', 1, 14, 0, 17, 0, [
+      { id: 1, name: 'Felix Brandt', department: 'IT', status: 'accepted' },
+      { id: 3, name: 'Sabine Kern', department: 'Vertrieb', status: 'accepted' },
+      { id: 7, name: 'Lena Hofmann', department: 'Marketing', status: 'open' },
+    ]),
     b(3, 4, 'Tom Reuter', 'Onboarding neue Mitarbeitende', 0, 10, 0, 12, 0),
-    b(2, 1, 'Felix Brandt', 'Code-Review Buchungsmodul', 2, 11, 0, 12, 0),
+    b(2, 1, 'Felix Brandt', 'Code-Review Buchungsmodul', 2, 11, 0, 12, 0, [
+      { id: 8, name: 'Jonas Pfeiffer', department: 'IT', status: 'accepted' },
+      { id: 4, name: 'Tom Reuter', department: 'Personal', status: 'open' },
+    ]),
     b(2, 3, 'Sabine Kern', 'Telefonkonferenz', 0, 15, 0, 16, 0),
     b(5, 2, 'Harald Weizmann', 'Abstimmung Jahresabschluss', 3, 8, 30, 10, 0),
     b(6, 4, 'Tom Reuter', 'Video-Call Standort Berlin', 1, 11, 0, 12, 30),
