@@ -108,21 +108,6 @@
     }
   </section>
 
-  @if (confirmed(); as b) {
-    <div id="buchung-bestaetigt" tabindex="-1" class="confirmed">
-      <p-message severity="success" icon="pi pi-check-circle">
-        <div class="confirmed__body">
-          <strong>Ihre Buchung ist eingetragen.</strong>
-          <span>Raum {{ roomName(b.roomId) }}, {{ b.start | date: 'EEEE, d. MMMM y' }}, {{ b.start | date: 'HH:mm' }}–{{ b.end | date: 'HH:mm' }} Uhr, gebucht für {{ b.userName }}.</span>
-          @if (b.invitees.length > 0) {
-            <span>Einladungen gesendet an: {{ inviteeNames(b) }}.</span>
-          }
-          <span>Eine Bestätigung wurde per E-Mail gesendet. Sie können die Buchung jederzeit unter <a routerLink="/meine-buchungen">Meine Buchungen</a> ändern oder stornieren.</span>
-        </div>
-      </p-message>
-    </div>
-  }
-
   @if (room(); as r) {
     <section class="calendar" aria-labelledby="cal-heading">
       <div class="calendar__head">
@@ -276,6 +261,45 @@
         <p-button label="Zurück" severity="secondary" [outlined]="true" (onClick)="step.set('form')" />
         <p-button label="Verbindlich buchen" icon="pi pi-check" (onClick)="confirm()" />
       }
+    </ng-template>
+  </p-dialog>
+
+  <p-dialog
+    header="Buchung bestätigt"
+    [visible]="confirmed() !== null"
+    (visibleChange)="!$event && confirmed.set(null)"
+    [modal]="true"
+    [draggable]="false"
+    [style]="{ width: '32rem' }"
+    [breakpoints]="{ '640px': '95vw' }"
+  >
+    @if (confirmed(); as b) {
+      <div class="done">
+        <span class="done__icon" aria-hidden="true"><i class="pi pi-check"></i></span>
+        <p class="done__title">Ihre Buchung ist eingetragen.</p>
+      </div>
+
+      <dl class="summary">
+        <dt>Raum</dt><dd>{{ roomName(b.roomId) }}</dd>
+        <dt>Datum</dt><dd>{{ b.start | date: 'EEEE, d. MMMM y' }}</dd>
+        <dt>Uhrzeit</dt><dd>{{ b.start | date: 'HH:mm' }}–{{ b.end | date: 'HH:mm' }} Uhr</dd>
+        <dt>Gebucht für</dt><dd>{{ b.userName }}</dd>
+        @if (b.invitees.length > 0) {
+          <dt>Einladungen</dt><dd>gesendet an {{ inviteeNames(b) }}</dd>
+        }
+        @if (b.online) {
+          <dt>Videokonferenz</dt><dd>ja, auch online verfügbar</dd>
+        }
+      </dl>
+
+      <p class="done__note">
+        <i class="pi pi-envelope" aria-hidden="true"></i>
+        <span>Eine Bestätigung wurde per E-Mail gesendet. Sie können die Buchung jederzeit unter „Meine Buchungen“ ändern oder stornieren.</span>
+      </p>
+    }
+    <ng-template #footer>
+      <p-button label="Zu meinen Buchungen" severity="secondary" [outlined]="true" (onClick)="goToMyBookings()" />
+      <p-button label="Fertig" icon="pi pi-check" (onClick)="confirmed.set(null)" />
     </ng-template>
   </p-dialog>
 </div>

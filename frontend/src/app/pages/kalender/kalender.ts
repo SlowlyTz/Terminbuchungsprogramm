@@ -1,7 +1,7 @@
 import { DatePipe } from '@angular/common';
 import { Component, DestroyRef, computed, effect, inject, input, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { AutoCompleteCompleteEvent, AutoCompleteModule } from '@openng/optimus-ui/autocomplete';
 import { ButtonModule } from '@openng/optimus-ui/button';
 import { DialogModule } from '@openng/optimus-ui/dialog';
@@ -40,7 +40,6 @@ const CAPACITY_OPTIONS = [
   imports: [
     DatePipe,
     FormsModule,
-    RouterLink,
     AutoCompleteModule,
     ButtonModule,
     DialogModule,
@@ -63,6 +62,7 @@ export class Kalender {
   private readonly data = inject(DataService);
   private readonly admin = inject(AdminDataService);
   private readonly notify = inject(Notify);
+  private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
 
   // Query params bound by the router: ?raum=<id>&vorlage=<bookingId>
@@ -286,9 +286,13 @@ export class Kalender {
     const booking = this.data.create(d, this.user().id, this.user().name);
     this.admin.log(this.user().name, 'booking_created', auditDetails(this.roomName(booking.roomId), booking));
     this.draft.set(null);
+    // The confirmation popup replaces the toast; both at once would say the same thing twice.
     this.confirmed.set(booking);
-    this.notify.success(`Raum ${this.roomName(booking.roomId)} ist für Sie reserviert.`, 'Buchung eingetragen');
-    queueMicrotask(() => document.getElementById('buchung-bestaetigt')?.focus());
+  }
+
+  goToMyBookings(): void {
+    this.confirmed.set(null);
+    this.router.navigate(['/meine-buchungen']);
   }
 
   cancelDraft(): void {
