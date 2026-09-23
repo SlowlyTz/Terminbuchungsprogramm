@@ -139,12 +139,6 @@
           }
         </div>
       </div>
-      <app-info-box class="calendar__hint">
-        <p>
-          Woche vom <strong>{{ weekDays()[0] | date: 'd. MMMM' }}</strong> bis <strong>{{ weekDays()[4] | date: 'd. MMMM y' }}</strong>.
-          Klicken Sie auf eine freie Zeit, um dort eine Buchung zu beginnen, oder auf einen Eintrag, um zu sehen, wer gebucht hat.
-        </p>
-      </app-info-box>
 
       <app-week-calendar
         [days]="visibleDays()"

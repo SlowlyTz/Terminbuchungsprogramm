@@ -18,7 +18,6 @@ import { Booking, BookingDraft, Invitee, Room } from '../../core/models';
 import { Notify } from '../../core/notify.service';
 import { BookingDetail } from '../../shared/booking-detail/booking-detail';
 import { EmptyState } from '../../shared/empty-state/empty-state';
-import { InfoBox } from '../../shared/info-box/info-box';
 import { WeekCalendar } from '../../shared/week-calendar/week-calendar';
 
 const MOBILE_QUERY = '(max-width: 767px)';
@@ -49,7 +48,6 @@ const CAPACITY_OPTIONS = [
     TagModule,
     BookingDetail,
     EmptyState,
-    InfoBox,
     WeekCalendar,
   ],
   templateUrl: './kalender.html',
