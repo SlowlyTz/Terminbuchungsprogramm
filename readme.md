@@ -18,6 +18,16 @@ plan.md     Aufgabenverteilung
 
 Node 22, npm ≥ 11, MariaDB.
 
+## Schnellstart
+
+Aus dem Projektordner, ohne nach `frontend/` zu wechseln:
+
+```bash
+npm run start         # startet das Frontend, http://localhost:4200
+```
+
+Beim ersten Mal vorher einmal `npm install` in `frontend/` ausführen.
+
 ## Frontend
 
 ```bash

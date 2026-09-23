@@ -1,0 +1,8 @@
+{
+  "name": "terminbuchungsprogramm",
+  "private": true,
+  "description": "Raumbuchung: Angular-Frontend und Express-Backend",
+  "scripts": {
+    "start": "npm --prefix frontend start"
+  }
+}
