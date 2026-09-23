@@ -13,7 +13,7 @@ import { AuthService } from '../../core/auth.service';
 import { DataService, combine } from '../../core/data.service';
 import { Booking, Invitee } from '../../core/models';
 import { Notify } from '../../core/notify.service';
-import { inviteLimit, seatLimitWarning } from '../../core/seats';
+import { seatLimit, seatLimitWarning } from '../../core/seats';
 import { Collapsible } from '../collapsible/collapsible';
 
 interface EditDraft {
@@ -22,6 +22,7 @@ interface EditDraft {
   title: string;
   invitees: Invitee[];
   online: boolean;
+  onlineInvitees: Invitee[];
 }
 
 /** Edit dialog for an existing booking: time, title and invitees. */
@@ -59,10 +60,10 @@ export class BookingEdit {
     return b ? (this.data.roomById().get(b.roomId)?.capacity ?? 0) : 0;
   });
   readonly seatsTaken = computed(() => (this.draft()?.invitees.length ?? 0) + 1);
-  readonly roomFull = computed(() => !this.draft()?.online && this.seatsTaken() >= this.seatCapacity());
+  readonly roomFull = computed(() => this.seatsTaken() >= this.seatCapacity());
   readonly onlineLocked = computed(() => {
     const d = this.draft();
-    return !!d && d.online && d.invitees.length > inviteLimit(this.seatCapacity(), false);
+    return !!d && d.online && d.onlineInvitees.length > 0;
   });
 
   readonly start = computed(() => {
@@ -91,8 +92,8 @@ export class BookingEdit {
       d.online === b.online &&
       d.startTime === toTime(b.start) &&
       d.endTime === toTime(b.end) &&
-      d.invitees.length === b.invitees.length &&
-      d.invitees.every((i) => b.invitees.some((o) => o.id === i.id))
+      sameIds(d.invitees, b.invitees) &&
+      sameIds(d.onlineInvitees, b.onlineInvitees)
     );
   });
 
@@ -103,7 +104,8 @@ export class BookingEdit {
       this.conflict.set(null);
       this.moreOpen.set(!!b?.online);
       this.draft.set(
-        b ? { startTime: toTime(b.start), endTime: toTime(b.end), title: b.title, invitees: [...b.invitees], online: b.online } : null,
+        b ? { startTime: toTime(b.start), endTime: toTime(b.end), title: b.title, invitees: [...b.invitees], online: b.online, onlineInvitees: [...b.onlineInvitees] }
+          : null,
       );
     });
   }
@@ -113,19 +115,24 @@ export class BookingEdit {
     this.conflict.set(null);
   }
 
-  /** Accepts the new invitee list up to the room's seats; anything beyond is dropped with a warning. */
+  /** Accepts the people for the room up to its seats; anything beyond is dropped with a warning. */
   setInvitees(list: Invitee[]): void {
     const d = this.draft();
     if (!d) return;
-    const max = inviteLimit(this.seatCapacity(), d.online);
+    const max = seatLimit(this.seatCapacity());
     if (list.length > max) {
-      const { summary, detail } = seatLimitWarning(this.seatCapacity());
+      const { summary, detail } = seatLimitWarning(this.seatCapacity(), d.online);
       this.notify.warn(detail, summary);
       this.moreOpen.set(true);
       this.patch({ invitees: list.slice(0, max) });
       return;
     }
     this.patch({ invitees: list });
+  }
+
+  /** Online participants are not limited by the room. */
+  setOnlineInvitees(list: Invitee[]): void {
+    this.patch({ onlineInvitees: list });
   }
 
   setOnline(online: boolean): void {
@@ -135,7 +142,9 @@ export class BookingEdit {
 
   searchInvitees(event: AutoCompleteCompleteEvent): void {
     const q = event.query.trim().toLowerCase();
-    const chosen = new Set(this.draft()?.invitees.map((i) => i.id) ?? []);
+    // Nobody can be in the room and online at once, so both lists are excluded.
+    const d = this.draft();
+    const chosen = new Set([...(d?.invitees ?? []), ...(d?.onlineInvitees ?? [])].map((i) => i.id));
     this.suggestions.set(
       this.admin
         .users()
@@ -160,7 +169,14 @@ export class BookingEdit {
       return;
     }
 
-    const updated = this.data.update(b.id, { start: s, end: e, title: d.title, invitees: d.invitees, online: d.online });
+    const updated = this.data.update(b.id, {
+      start: s,
+      end: e,
+      title: d.title,
+      invitees: d.invitees,
+      online: d.online,
+      onlineInvitees: d.online ? d.onlineInvitees : [],
+    });
     if (updated) this.saved.emit(updated);
   }
 
@@ -171,4 +187,8 @@ export class BookingEdit {
 
 function toTime(d: Date): string {
   return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+}
+
+function sameIds(a: Invitee[], b: Invitee[]): boolean {
+  return a.length === b.length && a.every((i) => b.some((o) => o.id === i.id));
 }

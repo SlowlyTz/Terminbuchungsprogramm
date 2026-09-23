@@ -177,7 +177,7 @@
         }
 
         <div class="field">
-          <label for="teilnehmer">Teilnehmer einladen</label>
+          <label for="teilnehmer">Teilnehmer vor Ort</label>
           <p-autocomplete
             inputId="teilnehmer"
             [ngModel]="d.invitees"
@@ -201,12 +201,10 @@
             </ng-template>
           </p-autocomplete>
           <small class="seats" [class.seats--full]="roomFull()" aria-live="polite">
+            <i class="pi pi-users" aria-hidden="true"></i>
+            {{ seatsTaken() }} von {{ seatCapacity() }} Plätzen belegt (inklusive Ihnen)
             @if (d.online) {
-              <i class="pi pi-video" aria-hidden="true"></i>
-              {{ seatCapacity() }} Plätze im Raum, weitere Teilnehmende sind online dabei.
-            } @else {
-              <i class="pi pi-users" aria-hidden="true"></i>
-              {{ seatsTaken() }} von {{ seatCapacity() }} Plätzen belegt (inklusive Ihnen)
+              <span class="seats__online">· {{ d.onlineInvitees.length }} online</span>
             }
           </small>
         </div>
@@ -222,14 +220,42 @@
               <label for="online">Auch per Videokonferenz verfügbar</label>
               <small>
                 @if (onlineLocked()) {
-                  Zum Ausschalten erst auf höchstens {{ seatCapacity() - 1 }} Eingeladene reduzieren.
+                  Zum Ausschalten erst die Online-Teilnehmenden entfernen.
                 } @else {
-                  Teilnehmende können online dazukommen, das Platzlimit des Raums entfällt.
+                  Weitere Personen können online zugeschaltet werden, ohne einen Platz im Raum zu belegen.
                 }
               </small>
             </div>
             <p-toggleswitch inputId="online" [ngModel]="d.online" (ngModelChange)="setOnline($event)" [disabled]="onlineLocked()" />
           </div>
+
+          @if (d.online) {
+            <div class="field online__people">
+              <label for="online-teilnehmer">Online zugeschaltet</label>
+              <p-autocomplete
+                inputId="online-teilnehmer"
+                [ngModel]="d.onlineInvitees"
+                (ngModelChange)="setOnlineInvitees($event)"
+                [suggestions]="suggestions()"
+                (completeMethod)="searchInvitees($event)"
+                optionLabel="name"
+                [multiple]="true"
+                [dropdown]="true"
+                [forceSelection]="true"
+                [minLength]="1"
+                placeholder="Name eingeben …"
+                appendTo="body"
+                styleClass="w-full"
+              >
+                <ng-template #item let-i>
+                  <div class="invitee-option">
+                    <span>{{ i.name }}</span>
+                    <span class="invitee-option__meta">{{ i.department }}</span>
+                  </div>
+                </ng-template>
+              </p-autocomplete>
+            </div>
+          }
         </app-collapsible>
       } @else {
         <dl class="summary">
@@ -237,7 +263,7 @@
           <dt>Datum</dt><dd>{{ d.date | date: 'EEEE, d. MMMM y' }}</dd>
           <dt>Uhrzeit</dt><dd>{{ d.startTime }}–{{ d.endTime }} Uhr</dd>
           <dt>Titel</dt><dd>{{ d.title || 'Besprechung' }}</dd>
-          <dt>Teilnehmer</dt>
+          <dt>Vor Ort</dt>
           <dd>
             @if (d.invitees.length === 0) {
               keine Einladungen
@@ -247,7 +273,18 @@
               </span>
             }
           </dd>
-          <dt>Videokonferenz</dt><dd>{{ d.online ? 'ja, auch online verfügbar' : 'nein' }}</dd>
+          <dt>Online</dt>
+          <dd>
+            @if (!d.online) {
+              keine Videokonferenz
+            } @else if (d.onlineInvitees.length === 0) {
+              Videokonferenz eingerichtet, noch niemand zugeschaltet
+            } @else {
+              <span class="chips">
+                @for (i of d.onlineInvitees; track i.id) { <p-tag [value]="i.name" severity="info" icon="pi pi-video" /> }
+              </span>
+            }
+          </dd>
           <dt>Gebucht für</dt><dd>{{ user().name }}</dd>
         </dl>
       }
@@ -284,10 +321,10 @@
         <dt>Uhrzeit</dt><dd>{{ b.start | date: 'HH:mm' }}–{{ b.end | date: 'HH:mm' }} Uhr</dd>
         <dt>Gebucht für</dt><dd>{{ b.userName }}</dd>
         @if (b.invitees.length > 0) {
-          <dt>Einladungen</dt><dd>gesendet an {{ inviteeNames(b) }}</dd>
+          <dt>Vor Ort</dt><dd>{{ names(b.invitees) }}</dd>
         }
         @if (b.online) {
-          <dt>Videokonferenz</dt><dd>ja, auch online verfügbar</dd>
+          <dt>Online</dt><dd>{{ b.onlineInvitees.length > 0 ? names(b.onlineInvitees) : 'Videokonferenz eingerichtet' }}</dd>
         }
       </dl>
 

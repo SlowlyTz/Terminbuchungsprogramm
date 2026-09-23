@@ -17,7 +17,7 @@ import { AuthService } from '../../core/auth.service';
 import { DataService, combine } from '../../core/data.service';
 import { Booking, BookingDraft, Invitee, Room } from '../../core/models';
 import { Notify } from '../../core/notify.service';
-import { inviteLimit, seatLimitWarning } from '../../core/seats';
+import { seatLimit, seatLimitWarning } from '../../core/seats';
 import { BookingDetail } from '../../shared/booking-detail/booking-detail';
 import { Collapsible } from '../../shared/collapsible/collapsible';
 import { EmptyState } from '../../shared/empty-state/empty-state';
@@ -119,7 +119,7 @@ export class Kalender {
     return r ? this.data.bookings().filter((b) => b.roomId === r.id) : [];
   });
   readonly roomName = (id: number) => this.data.roomById().get(id)?.name ?? '';
-  readonly inviteeNames = (b: Booking) => b.invitees.map((i) => i.name).join(', ');
+  readonly names = (list: Invitee[]) => list.map((i) => i.name).join(', ');
 
   readonly draftStart = computed(() => {
     const d = this.draft();
@@ -142,13 +142,13 @@ export class Kalender {
     const d = this.draft();
     return d ? (this.data.roomById().get(d.roomId)?.capacity ?? 0) : 0;
   });
-  /** Organiser plus invitees. */
+  /** Organiser plus the people invited to the room; online participants take no seat. */
   readonly seatsTaken = computed(() => (this.draft()?.invitees.length ?? 0) + 1);
-  readonly roomFull = computed(() => !this.draft()?.online && this.seatsTaken() >= this.seatCapacity());
-  /** Going back to in-room only would overbook the room, so the switch stays on until people are removed. */
+  readonly roomFull = computed(() => this.seatsTaken() >= this.seatCapacity());
+  /** Switching the video conference off would drop the online participants, so it waits until they are removed. */
   readonly onlineLocked = computed(() => {
     const d = this.draft();
-    return !!d && d.online && d.invitees.length > inviteLimit(this.seatCapacity(), false);
+    return !!d && d.online && d.onlineInvitees.length > 0;
   });
 
   constructor() {
@@ -173,6 +173,7 @@ export class Kalender {
           title: template.title,
           invitees: [...template.invitees],
           online: template.online,
+          onlineInvitees: [...template.onlineInvitees],
         });
         this.moreOpen.set(template.online);
         this.step.set('form');
@@ -225,12 +226,14 @@ export class Kalender {
     this.conflict.set(null);
     this.step.set('form');
     this.moreOpen.set(false);
-    this.draft.set({ roomId: r.id, date: slotStart, startTime: toTime(slotStart), endTime: toTime(end), title: '', invitees: [], online: false });
+    this.draft.set({ roomId: r.id, date: slotStart, startTime: toTime(slotStart), endTime: toTime(end), title: '', invitees: [], online: false, onlineInvitees: [] });
   }
 
   searchInvitees(event: AutoCompleteCompleteEvent): void {
     const q = event.query.trim().toLowerCase();
-    const chosen = new Set(this.draft()?.invitees.map((i) => i.id) ?? []);
+    // Nobody can be in the room and online at once, so both lists are excluded.
+    const d = this.draft();
+    const chosen = new Set([...(d?.invitees ?? []), ...(d?.onlineInvitees ?? [])].map((i) => i.id));
     this.suggestions.set(
       this.admin
         .users()
@@ -246,13 +249,13 @@ export class Kalender {
     this.conflict.set(null);
   }
 
-  /** Accepts the new invitee list up to the room's seats; anything beyond is dropped with a warning. */
+  /** Accepts the people for the room up to its seats; anything beyond is dropped with a warning. */
   setInvitees(list: Invitee[]): void {
     const d = this.draft();
     if (!d) return;
-    const max = inviteLimit(this.seatCapacity(), d.online);
+    const max = seatLimit(this.seatCapacity());
     if (list.length > max) {
-      const { summary, detail } = seatLimitWarning(this.seatCapacity());
+      const { summary, detail } = seatLimitWarning(this.seatCapacity(), d.online);
       this.notify.warn(detail, summary);
       this.moreOpen.set(true);
       // A fresh array makes the autocomplete drop the chip it already added.
@@ -260,6 +263,11 @@ export class Kalender {
       return;
     }
     this.patchDraft({ invitees: list });
+  }
+
+  /** Online participants are not limited by the room. */
+  setOnlineInvitees(list: Invitee[]): void {
+    this.patchDraft({ onlineInvitees: list });
   }
 
   setOnline(online: boolean): void {

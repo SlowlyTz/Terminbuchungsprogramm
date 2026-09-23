@@ -1,15 +1,14 @@
-/**
- * How many people can be invited to a room. The organiser takes one of the
- * seats; a meeting that is also held as a video conference has no limit.
- */
-export function inviteLimit(capacity: number, online: boolean): number {
-  return online ? Infinity : Math.max(0, capacity - 1);
+/** How many people can be invited to attend in the room: the organiser takes one of the seats. */
+export function seatLimit(capacity: number): number {
+  return Math.max(0, capacity - 1);
 }
 
-/** Toast shown when someone tries to invite more people than the room holds. */
-export function seatLimitWarning(capacity: number): { summary: string; detail: string } {
+/** Toast shown when someone tries to invite more people to the room than it holds. */
+export function seatLimitWarning(capacity: number, online: boolean): { summary: string; detail: string } {
   return {
     summary: `In diesem Raum ist nur Platz für ${capacity} ${capacity === 1 ? 'Person' : 'Personen'}.`,
-    detail: 'Für weitere Teilnehmende unter „Weitere Angaben“ die Videokonferenz aktivieren.',
+    detail: online
+      ? 'Weitere Teilnehmende bitte unter „Online zugeschaltet“ einladen.'
+      : 'Weitere Teilnehmende können per Videokonferenz zugeschaltet werden (unter „Weitere Angaben“).',
   };
 }
