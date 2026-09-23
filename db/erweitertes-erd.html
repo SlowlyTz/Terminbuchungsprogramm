@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Erweitertes ERD Raumbuchung</title>
+<meta name="description" content="Erweitertes Entity-Relationship-Diagramm der MariaDB-Datenbank raumbuchung – vollständig aus db/010_init_db.sql abgeleitet (Datentypen, NULL, Defaults, Schlüssel, Löschregeln, Kardinalitäten).">
+<style>
+  :root {
+    --bg: #f4f4f4;
+    --surface: #ffffff;
+    --text: #111111;
+    --muted: #666666;
+    --line: #d0d0d0;
+    --stroke: #222222;
+    --head: #ededed;
+    --head-junction: #d9d9d9;
+    --head-optional: #ffffff;
+    --head-tech: #f6f6f6;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #161616; --surface: #1f1f1f; --text: #f0f0f0; --muted: #a0a0a0; --line: #3a3a3a;
+      --stroke: #e0e0e0; --head: #2c2c2c; --head-junction: #3a3a3a; --head-optional: #1f1f1f; --head-tech: #262626;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #161616; --surface: #1f1f1f; --text: #f0f0f0; --muted: #a0a0a0; --line: #3a3a3a;
+    --stroke: #e0e0e0; --head: #2c2c2c; --head-junction: #3a3a3a; --head-optional: #1f1f1f; --head-tech: #262626;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  main { max-width: 3140px; margin: 0 auto; padding: 24px 16px 48px; }
+  h1 { font-size: 1.5rem; margin: 0 0 4px; }
+  .meta { margin: 0 0 16px; font-size: 0.95rem; color: var(--muted); }
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 16px; overflow-x: auto; }
+  svg { display: block; width: 100%; height: auto; min-width: 2200px; font-family: inherit; }
+  .legend { display: flex; flex-wrap: wrap; justify-content: space-between; row-gap: 12px; column-gap: 24px; margin-top: 20px; font-size: 1.05rem; color: var(--muted); }
+  .legend span { display: inline-flex; align-items: center; gap: 8px; }
+  .sw { width: 22px; height: 14px; border-radius: 2px; border: 2px solid var(--stroke); display: inline-block; background: var(--surface); }
+  .sw.junction { background: var(--head-junction); }
+  .sw.tech { border-style: dotted; }
+  .sw.diamond { width: 16px; height: 16px; transform: rotate(45deg) scale(0.8); border-radius: 0; }
+  b.k { color: var(--text); font-weight: 700; }
+</style>
+</head>
+<body>
+<main>
+  <section class="card" aria-label="Erweitertes ER-Diagramm">
+    <h1>Erweitertes ERD Raumbuchung</h1>
+    <p class="meta">Quelle: db/010_init_db.sql · MariaDB 10.11 · Datenbank <b class="k">raumbuchung</b> · CHARACTER SET utf8mb4 · COLLATE utf8mb4_unicode_ci · alle Tabellen ENGINE = InnoDB</p>
+    <svg id="erd" viewBox="0 0 3060 1262" role="img" aria-labelledby="erd-title">
+      <title id="erd-title">Erweitertes Entity-Relationship-Diagramm der Raumbuchungs-Datenbank mit Datentypen, Schlüsseln, Defaults und Löschregeln</title>
+    </svg>
+    <div class="legend">
+      <span><i class="sw"></i> Entität</span>
+      <span><i class="sw junction"></i> Zwischentabelle (n:m)</span>
+      <span><i class="sw diamond"></i> Beziehung</span>
+      <span><i class="sw tech"></i> technisch – kein Fremdschlüssel</span>
+      <span><u>unterstrichen</u> = Primärschlüssel</span>
+      <span><b class="k">PK</b> Primärschlüssel · <b class="k">FK</b> Fremdschlüssel · <b class="k">UQ</b> UNIQUE · <b class="k">IX</b> Index · <b class="k">AI</b> AUTO_INCREMENT</span>
+      <span><b class="k">NN</b> = NOT NULL · <b class="k">NULL</b> = darf leer sein</span>
+      <span><b class="k">= Wert</b> = DEFAULT · <em>kursiv</em> bei FK = ON DELETE / ON UPDATE</span>
+      <span><b class="k">0..1 · 1 · 0..n · 1..n</b> = Anzahl Datensätze dieser Entität je Datensatz der anderen</span>
+    </div>
+  </section>
+</main>
+
+<script>
+(function () {
+  // ---------- Modelldefinition (1:1 aus db/010_init_db.sql) ----------
+  // kind: core | junction | tech
+  // attrs: { n: Spalte, t: Typ, nn: NOT NULL, def: DEFAULT, rule: 'ON DELETE / ON UPDATE' (nur FK),
+  //          keys: 'PK AI' | 'FK' | 'UQ' | 'IX', sub: Zusatzzeile (ENUM-Werte, ON UPDATE, COLLATE) }
+  const X1 = 40, X2 = 820, X3 = 1680, X4 = 2460, W = 560;
+  const CAS = 'CASCADE / CASCADE', SNU = 'SET NULL / CASCADE';
+  const entities = [
+    { id: 'departments', kind: 'core', x: X1, y: 330,
+      attrs: [
+        { n: 'department_id', t: 'INT UNSIGNED', nn: true, keys: 'PK AI' },
+        { n: 'name', t: 'VARCHAR(100)', nn: true, keys: 'UQ' },
+        { n: 'is_active', t: 'BOOLEAN', nn: true, def: '1' },
+      ] },
+    { id: 'roles', kind: 'core', x: X1, y: 500,
+      attrs: [
+        { n: 'role_id', t: 'INT UNSIGNED', nn: true, keys: 'PK AI' },
+        { n: 'name', t: 'VARCHAR(50)', nn: true, keys: 'UQ' },
+        { n: 'is_active', t: 'BOOLEAN', nn: true, def: '1' },
+      ] },
+    { id: 'password_reset_tokens', kind: 'core', x: X1, y: 670,
+      attrs: [
+        { n: 'password_reset_token_id', t: 'INT UNSIGNED', nn: true, keys: 'PK AI' },
+        { n: 'user_id', t: 'INT UNSIGNED', nn: true, rule: CAS, keys: 'FK' },
+        { n: 'token_hash', t: 'CHAR(64)', nn: true, keys: 'UQ' },
+        { n: 'expires_at', t: 'DATETIME', nn: true },
+        { n: 'used_at', t: 'DATETIME', nn: false },
+        { n: 'created_at', t: 'DATETIME', nn: true, def: 'CURRENT_TIMESTAMP' },
+      ] },
+    { id: 'sessions', kind: 'tech', x: X1, y: 960, badge: 'Session-Store · kein FK',
+      attrs: [
+        { n: 'session_id', t: 'VARCHAR(128)', nn: true, keys: 'PK', sub: 'COLLATE utf8mb4_bin' },
+        { n: 'expires', t: 'INT UNSIGNED', nn: true },
+        { n: 'data', t: 'MEDIUMTEXT', nn: true, sub: 'COLLATE utf8mb4_bin' },
+      ] },
+    { id: 'users', kind: 'core', x: X2, y: 330,
+      attrs: [
+        { n: 'user_id', t: 'INT UNSIGNED', nn: true, keys: 'PK AI' },
+        { n: 'department_id', t: 'INT UNSIGNED', nn: false, rule: SNU, keys: 'FK' },
+        { n: 'role_id', t: 'INT UNSIGNED', nn: false, rule: SNU, keys: 'FK' },
+        { n: 'email', t: 'VARCHAR(255)', nn: true, keys: 'UQ' },
+        { n: 'password_hash', t: 'CHAR(60)', nn: true },
+        { n: 'first_name', t: 'VARCHAR(100)', nn: true },
+        { n: 'last_name', t: 'VARCHAR(100)', nn: true },
+        { n: 'failed_login_count', t: 'TINYINT UNSIGNED', nn: true, def: '0' },
+        { n: 'locked_until', t: 'DATETIME', nn: false },
+        { n: 'is_active', t: 'BOOLEAN', nn: true, def: '1' },
+        { n: 'created_at', t: 'DATETIME', nn: true, def: 'CURRENT_TIMESTAMP' },
+        { n: 'updated_at', t: 'DATETIME', nn: true, def: 'CURRENT_TIMESTAMP', sub: 'ON UPDATE CURRENT_TIMESTAMP' },
+      ] },
+    { id: 'booking_series', kind: 'core', x: X3, y: 20,
+      attrs: [
+        { n: 'booking_series_id', t: 'INT UNSIGNED', nn: true, keys: 'PK AI' },
+        { n: 'frequency', t: 'ENUM', nn: true, sub: "ENUM('täglich', 'wöchentlich', 'monatlich')" },
+        { n: 'interval_value', t: 'TINYINT UNSIGNED', nn: true, def: '1' },
+        { n: 'until_date', t: 'DATE', nn: true },
+        { n: 'is_active', t: 'BOOLEAN', nn: true, def: '1' },
+      ] },
+    { id: 'bookings', kind: 'core', x: X3, y: 330,
+      attrs: [
+        { n: 'booking_id', t: 'INT UNSIGNED', nn: true, keys: 'PK AI' },
+        { n: 'meeting_id', t: 'INT UNSIGNED', nn: true, keys: 'IX' },
+        { n: 'room_id', t: 'INT UNSIGNED', nn: false, rule: SNU, keys: 'FK' },
+        { n: 'organizer_id', t: 'INT UNSIGNED', nn: false, rule: SNU, keys: 'FK' },
+        { n: 'booking_series_id', t: 'INT UNSIGNED', nn: false, rule: SNU, keys: 'FK' },
+        { n: 'starts_at', t: 'DATETIME', nn: true },
+        { n: 'ends_at', t: 'DATETIME', nn: true },
+        { n: 'title', t: 'VARCHAR(200)', nn: false },
+        { n: 'description', t: 'TEXT', nn: false },
+        { n: 'guest_count', t: 'SMALLINT UNSIGNED', nn: true, def: '0' },
+        { n: 'note', t: 'VARCHAR(255)', nn: false },
+        { n: 'status', t: 'ENUM', nn: true, def: "'geplant'", sub: "ENUM('geplant', 'abgesagt')" },
+        { n: 'created_by_id', t: 'INT UNSIGNED', nn: false, rule: SNU, keys: 'FK' },
+        { n: 'created_at', t: 'DATETIME', nn: true, def: 'CURRENT_TIMESTAMP' },
+        { n: 'is_active', t: 'BOOLEAN', nn: true, def: '1' },
+        { n: 'deactivated_by_id', t: 'INT UNSIGNED', nn: false, rule: SNU, keys: 'FK' },
+        { n: 'deactivated_at', t: 'DATETIME', nn: false },
+      ] },
+    { id: 'booking_participants', kind: 'junction', x: X3, y: 902,
+      attrs: [
+        { n: 'booking_participant_id', t: 'INT UNSIGNED', nn: true, keys: 'PK AI' },
+        { n: 'meeting_id', t: 'INT UNSIGNED', nn: true, rule: CAS, keys: 'FK' },
+        { n: 'user_id', t: 'INT UNSIGNED', nn: true, rule: CAS, keys: 'FK' },
+        { n: 'role', t: 'ENUM', nn: true, sub: "ENUM('pflicht', 'optional')" },
+        { n: 'status', t: 'ENUM', nn: true, sub: "ENUM('eingeladen', 'angenommen', 'abgelehnt')" },
+        { n: 'comment', t: 'VARCHAR(255)', nn: false },
+        { n: 'created_by_id', t: 'INT UNSIGNED', nn: false, rule: SNU, keys: 'FK' },
+        { n: 'created_at', t: 'DATETIME', nn: true, def: 'CURRENT_TIMESTAMP' },
+        { n: 'is_active', t: 'BOOLEAN', nn: true, def: '1' },
+        { n: 'deactivated_by_id', t: 'INT UNSIGNED', nn: false, rule: SNU, keys: 'FK' },
+        { n: 'deactivated_at', t: 'DATETIME', nn: false },
+      ] },
+    { id: 'rooms', kind: 'core', x: X4, y: 330,
+      attrs: [
+        { n: 'room_id', t: 'INT UNSIGNED', nn: true, keys: 'PK AI' },
+        { n: 'name', t: 'VARCHAR(100)', nn: true, keys: 'UQ' },
+        { n: 'building', t: 'VARCHAR(100)', nn: false },
+        { n: 'floor', t: 'VARCHAR(20)', nn: false },
+        { n: 'capacity', t: 'SMALLINT UNSIGNED', nn: true },
+        { n: 'description', t: 'TEXT', nn: false },
+        { n: 'is_active', t: 'BOOLEAN', nn: true, def: '1' },
+        { n: 'created_at', t: 'DATETIME', nn: true, def: 'CURRENT_TIMESTAMP' },
+        { n: 'updated_at', t: 'DATETIME', nn: true, def: 'CURRENT_TIMESTAMP', sub: 'ON UPDATE CURRENT_TIMESTAMP' },
+      ] },
+    { id: 'room_equipment', kind: 'junction', x: X4, y: 730,
+      attrs: [
+        { n: 'room_equipment_id', t: 'INT UNSIGNED', nn: true, keys: 'PK AI' },
+        { n: 'room_id', t: 'INT UNSIGNED', nn: true, rule: CAS, keys: 'FK' },
+        { n: 'equipment_id', t: 'INT UNSIGNED', nn: true, rule: CAS, keys: 'FK' },
+        { n: 'quantity', t: 'SMALLINT UNSIGNED', nn: true, def: '1' },
+        { n: 'is_active', t: 'BOOLEAN', nn: true, def: '1' },
+      ] },
+    { id: 'equipment', kind: 'core', x: X4, y: 1020,
+      attrs: [
+        { n: 'equipment_id', t: 'INT UNSIGNED', nn: true, keys: 'PK AI' },
+        { n: 'name', t: 'VARCHAR(100)', nn: true, keys: 'UQ' },
+        { n: 'is_active', t: 'BOOLEAN', nn: true, def: '1' },
+      ] },
+  ];
+
+  // Beziehungen: genau eine Linie pro Entitätspaar (wie im ERM). FK-Spalten als Untertitel.
+  // ca/cb = Kardinalität am jeweiligen Ende, abgeleitet aus NULL/NOT NULL der FK-Spalte:
+  //   FK NOT NULL -> Elternseite 1, FK NULL -> Elternseite 0..1, Kindseite immer 0..n.
+  //   bookings.meeting_id ist nicht eindeutig (eine Zeile je Version) -> 1..n.
+  const relations = [
+    { a: ['departments', 'right', 385], b: ['users', 'left', 380], ca: '0..1', cb: '0..n', verb: 'gehört zu', fks: 'department_id' },
+    { a: ['roles', 'right', 555],       b: ['users', 'left', 470], ca: '0..1', cb: '0..n', verb: 'hat Rolle', fks: 'role_id' },
+    { a: ['password_reset_tokens', 'right', 760], b: ['users', 'left', 560], ca: '0..n', cb: '1', verb: 'gehört zu', fks: 'user_id' },
+    { a: ['users', 'right', 450], b: ['bookings', 'left', 450], ca: '0..1', cb: '0..n', verb: 'bucht / bearbeitet', dw: 100, fks: ['organizer_id — Veranstalter', 'created_by_id — angelegt', 'deactivated_by_id — entfernt'] },
+    { a: ['bookings', 'right', 400], b: ['rooms', 'left', 400], ca: '0..n', cb: '0..1', verb: 'belegt', fks: 'room_id' },
+    { a: ['rooms', 'bottom', 2740], b: ['room_equipment', 'top', 2740], ca: '1', cb: '0..n', verb: 'hat', fks: 'room_id', vertical: true },
+    { a: ['room_equipment', 'bottom', 2740], b: ['equipment', 'top', 2740], ca: '0..n', cb: '1', verb: 'ist', fks: 'equipment_id', vertical: true },
+    { a: ['bookings', 'top', 1960], b: ['booking_series', 'bottom', 1960], ca: '0..n', cb: '0..1', verb: 'gehört zu', fks: 'booking_series_id', vertical: true },
+    { a: ['users', 'bottom', 1240], b: ['booking_participants', 'top', 1760], ca: '1', cb: '0..n', verb: 'nimmt teil', fks: ['user_id — Teilnehmer (1)', 'created_by_id / deactivated_by_id — Verlauf (0..1)'], vertical: true, subSide: 'left' },
+    { a: ['bookings', 'bottom', 1960], b: ['booking_participants', 'top', 1960], ca: '1..n', cb: '0..n', verb: 'lädt ein', fks: ['meeting_id', '(1..n = alle Versionen eines Meetings)'], vertical: true },
+  ];
+
+  // ---------- Rendering SVG ----------
+  const NS = 'http://www.w3.org/2000/svg';
+  const HEAD = 36, ROW = 22, PAD = 8;
+  const DW = 72, DH = 30; // halbe Rautenbreite/-höhe
+  // Spalten innerhalb einer Entität (x-Versatz ab linkem Rand)
+  const C_NAME = 12, C_TYPE = 190, C_NULL = 335, C_DEF = 380, C_KEYS = W - 12;
+  const style = {
+    core:     { head: 'var(--head)',          dash: '' },
+    junction: { head: 'var(--head-junction)', dash: '' },
+    tech:     { head: 'var(--head-tech)',     dash: '2 4' },
+  };
+  const byId = {};
+  entities.forEach(e => {
+    e.w = W;
+    e.rows = e.attrs.reduce((s, a) => s + (a.sub ? 2 : 1), 0);
+    e.h = HEAD + e.rows * ROW + PAD;
+    byId[e.id] = e;
+  });
+
+  const svg = document.getElementById('erd');
+  const el = (tag, attrs, text) => {
+    const n = document.createElementNS(NS, tag);
+    for (const k in attrs) n.setAttribute(k, attrs[k]);
+    if (text != null) n.textContent = text;
+    return n;
+  };
+  const anchor = ([id, side, off]) => {
+    const e = byId[id];
+    switch (side) {
+      case 'left':   return { x: e.x, y: off };
+      case 'right':  return { x: e.x + e.w, y: off };
+      case 'top':    return { x: off, y: e.y };
+      case 'bottom': return { x: off, y: e.y + e.h };
+    }
+  };
+  // Kardinalität: 20 px vom Endpunkt P Richtung Q, 10 px senkrecht daneben; Ausrichtung je nach Seite,
+  // damit mehrstellige Angaben (0..n) die Linie nicht überdecken
+  const cardText = (g, P, Q, txt) => {
+    if (!txt) return;
+    const dx = Q.x - P.x, dy = Q.y - P.y, len = Math.hypot(dx, dy), ux = dx / len, uy = dy / len;
+    const px = -uy, py = ux;
+    const x = P.x + ux * 20 + px * 10, y = P.y + uy * 20 + py * 10;
+    const anchorMode = px > 0.3 ? 'start' : px < -0.3 ? 'end' : 'middle';
+    const dyBase = py > 0.3 ? 13 : py < -0.3 ? -3 : 6;
+    g.appendChild(el('text', { x, y: y + dyBase, 'text-anchor': anchorMode, 'font-size': 16, 'font-weight': 700, fill: 'var(--text)' }, txt));
+  };
+
+  // Linien + Rauten zuerst (liegen unter den Kästen)
+  const gLines = el('g', {});
+  relations.forEach(r => {
+    const A = anchor(r.a), B = anchor(r.b);
+    const M = { x: (A.x + B.x) / 2, y: (A.y + B.y) / 2 };
+    const lineAttrs = { stroke: 'var(--stroke)', 'stroke-width': 1.6 };
+    gLines.appendChild(el('line', { x1: A.x, y1: A.y, x2: M.x, y2: M.y, ...lineAttrs }));
+    gLines.appendChild(el('line', { x1: M.x, y1: M.y, x2: B.x, y2: B.y, ...lineAttrs }));
+    cardText(gLines, A, M, r.ca);
+    cardText(gLines, B, M, r.cb);
+
+    const DWr = r.dw || DW;
+    gLines.appendChild(el('polygon', {
+      points: `${M.x - DWr},${M.y} ${M.x},${M.y - DH} ${M.x + DWr},${M.y} ${M.x},${M.y + DH}`,
+      fill: 'var(--surface)', stroke: 'var(--stroke)', 'stroke-width': 1.6 }));
+    gLines.appendChild(el('text', { x: M.x, y: M.y + 5, 'text-anchor': 'middle', 'font-size': 14.5, 'font-weight': 600, fill: 'var(--text)' }, r.verb));
+
+    const lines = Array.isArray(r.fks) ? r.fks : [r.fks];
+    let x, anchorMode, y0;
+    if (r.vertical && r.subSide === 'left') { x = M.x - DWr - 8; anchorMode = 'end'; y0 = M.y + 4 - (lines.length - 1) * 7; }
+    else if (r.vertical)                     { x = M.x + DWr + 8; anchorMode = 'start'; y0 = M.y + 4 - (lines.length - 1) * 7; }
+    else                                     { x = M.x; anchorMode = 'middle'; y0 = M.y + DH + 15; }
+    lines.forEach((txt, i) => gLines.appendChild(el('text', { x, y: y0 + i * 14, 'text-anchor': anchorMode, 'font-size': 12, fill: 'var(--muted)' }, txt)));
+  });
+  svg.appendChild(gLines);
+
+  // Entitäten
+  entities.forEach(e => {
+    const s = style[e.kind];
+    const g = el('g', {});
+    g.appendChild(el('rect', { x: e.x, y: e.y, width: e.w, height: e.h, fill: 'var(--surface)', stroke: 'var(--stroke)', 'stroke-width': 1.6, 'stroke-dasharray': s.dash }));
+    g.appendChild(el('rect', { x: e.x, y: e.y, width: e.w, height: HEAD, fill: s.head }));
+    g.appendChild(el('line', { x1: e.x, y1: e.y + HEAD, x2: e.x + e.w, y2: e.y + HEAD, stroke: 'var(--stroke)', 'stroke-width': 1.6 }));
+    g.appendChild(el('text', { x: e.x + 12, y: e.y + 24, 'font-size': 16, 'font-weight': 700, fill: 'var(--text)' }, e.id));
+    if (e.badge) g.appendChild(el('text', { x: e.x, y: e.y - 7, 'font-size': 12, fill: 'var(--muted)' }, e.badge));
+
+    let row = 0;
+    e.attrs.forEach(a => {
+      const y = e.y + HEAD + 16 + row * ROW;
+      g.appendChild(el('text', { x: e.x + C_NAME, y, 'font-size': 13.5, fill: 'var(--text)',
+        'text-decoration': a.keys && a.keys.startsWith('PK') ? 'underline' : 'none',
+        'font-weight': a.keys && a.keys.startsWith('PK') ? 600 : 400 }, a.n));
+      g.appendChild(el('text', { x: e.x + C_TYPE, y, 'font-size': 12, fill: 'var(--text)' }, a.t));
+      g.appendChild(el('text', { x: e.x + C_NULL, y, 'font-size': 12, fill: 'var(--muted)' }, a.nn ? 'NN' : 'NULL'));
+      if (a.rule)     g.appendChild(el('text', { x: e.x + C_DEF, y, 'font-size': 12, 'font-style': 'italic', fill: 'var(--muted)' }, a.rule));
+      else if (a.def) g.appendChild(el('text', { x: e.x + C_DEF, y, 'font-size': 12, fill: 'var(--text)' }, '= ' + a.def));
+      if (a.keys)     g.appendChild(el('text', { x: e.x + C_KEYS, y, 'text-anchor': 'end', 'font-size': 12, 'font-weight': 700, fill: 'var(--text)' }, a.keys));
+      row++;
+      if (a.sub) {
+        g.appendChild(el('text', { x: e.x + C_TYPE, y: e.y + HEAD + 16 + row * ROW - 2, 'font-size': 11.5, fill: 'var(--muted)' }, a.sub));
+        row++;
+      }
+    });
+    svg.appendChild(g);
+  });
+})();
+</script>
+</body>
+</html>
