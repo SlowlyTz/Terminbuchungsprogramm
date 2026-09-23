@@ -23,6 +23,8 @@ export interface Booking {
   start: Date;
   end: Date;
   invitees: Invitee[];
+  /** Also held as a video conference; lifts the room's seat limit for invitations. */
+  online: boolean;
 }
 
 export interface BookingDraft {
@@ -32,6 +34,7 @@ export interface BookingDraft {
   endTime: string;
   title: string;
   invitees: Invitee[];
+  online: boolean;
 }
 
 export type Role = 'nutzer' | 'admin';

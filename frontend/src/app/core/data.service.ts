@@ -28,7 +28,7 @@ function seedBookings(): Booking[] {
   const m = mondayOffset();
   let id = 1;
   const b = (roomId: number, userId: number, userName: string, title: string, day: number, sh: number, sm: number, eh: number, em: number, invitees: Invitee[] = []): Booking => ({
-    id: id++, roomId, userId, userName, title, start: at(m + day, sh, sm), end: at(m + day, eh, em), invitees,
+    id: id++, roomId, userId, userName, title, start: at(m + day, sh, sm), end: at(m + day, eh, em), invitees, online: false,
   });
   return [
     b(1, 2, 'Harald Weizmann', 'Monatsabschluss Buchhaltung', 1, 10, 0, 12, 0),
@@ -113,6 +113,7 @@ export class DataService {
       start,
       end,
       invitees: [...draft.invitees],
+      online: draft.online,
     };
     this._bookings.update((list) => [...list, booking]);
     return booking;

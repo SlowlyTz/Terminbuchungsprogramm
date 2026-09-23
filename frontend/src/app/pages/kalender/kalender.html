@@ -197,7 +197,7 @@
           <p-autocomplete
             inputId="teilnehmer"
             [ngModel]="d.invitees"
-            (ngModelChange)="patchDraft({ invitees: $event })"
+            (ngModelChange)="setInvitees($event)"
             [suggestions]="suggestions()"
             (completeMethod)="searchInvitees($event)"
             optionLabel="name"
@@ -216,13 +216,35 @@
               </div>
             </ng-template>
           </p-autocomplete>
-          <small class="hint">Eingeladene sehen den Termin unter „Benachrichtigungen“ und können zu- oder absagen.</small>
+          <small class="seats" [class.seats--full]="roomFull()" aria-live="polite">
+            @if (d.online) {
+              <i class="pi pi-video" aria-hidden="true"></i>
+              {{ seatCapacity() }} Plätze im Raum, weitere Teilnehmende sind online dabei.
+            } @else {
+              <i class="pi pi-users" aria-hidden="true"></i>
+              {{ seatsTaken() }} von {{ seatCapacity() }} Plätzen belegt (inklusive Ihnen)
+            }
+          </small>
         </div>
 
-        <app-collapsible title="Weitere Angaben" hint="optional" class="form__more">
+        <app-collapsible title="Weitere Angaben" hint="optional" class="form__more" [(open)]="moreOpen">
           <div class="field">
             <label for="titel">Titel der Besprechung</label>
             <input pInputText id="titel" [ngModel]="d.title" (ngModelChange)="patchDraft({ title: $event })" placeholder="z. B. Monatsabschluss">
+          </div>
+
+          <div class="online">
+            <div class="online__text">
+              <label for="online">Auch per Videokonferenz verfügbar</label>
+              <small>
+                @if (onlineLocked()) {
+                  Zum Ausschalten erst auf höchstens {{ seatCapacity() - 1 }} Eingeladene reduzieren.
+                } @else {
+                  Teilnehmende können online dazukommen, das Platzlimit des Raums entfällt.
+                }
+              </small>
+            </div>
+            <p-toggleswitch inputId="online" [ngModel]="d.online" (ngModelChange)="setOnline($event)" [disabled]="onlineLocked()" />
           </div>
         </app-collapsible>
       } @else {
@@ -241,6 +263,7 @@
               </span>
             }
           </dd>
+          <dt>Videokonferenz</dt><dd>{{ d.online ? 'ja, auch online verfügbar' : 'nein' }}</dd>
           <dt>Gebucht für</dt><dd>{{ user().name }}</dd>
         </dl>
       }

@@ -10,12 +10,14 @@ import { MessageModule } from '@openng/optimus-ui/message';
 import { MultiSelectModule } from '@openng/optimus-ui/multiselect';
 import { SelectModule } from '@openng/optimus-ui/select';
 import { TagModule } from '@openng/optimus-ui/tag';
+import { ToggleSwitchModule } from '@openng/optimus-ui/toggleswitch';
 
 import { AdminDataService } from '../../core/admin-data.service';
 import { AuthService } from '../../core/auth.service';
 import { DataService, combine } from '../../core/data.service';
 import { Booking, BookingDraft, Invitee, Room } from '../../core/models';
 import { Notify } from '../../core/notify.service';
+import { inviteLimit, seatLimitWarning } from '../../core/seats';
 import { BookingDetail } from '../../shared/booking-detail/booking-detail';
 import { Collapsible } from '../../shared/collapsible/collapsible';
 import { EmptyState } from '../../shared/empty-state/empty-state';
@@ -47,6 +49,7 @@ const CAPACITY_OPTIONS = [
     MultiSelectModule,
     SelectModule,
     TagModule,
+    ToggleSwitchModule,
     BookingDetail,
     Collapsible,
     EmptyState,
@@ -132,6 +135,22 @@ export class Kalender {
     return !s || !e || e <= s;
   });
 
+  // --- Seats -----------------------------------------------------------------
+  /** "Weitere Angaben" section; opened when the seat limit is hit so the video switch is in view. */
+  readonly moreOpen = signal(false);
+  readonly seatCapacity = computed(() => {
+    const d = this.draft();
+    return d ? (this.data.roomById().get(d.roomId)?.capacity ?? 0) : 0;
+  });
+  /** Organiser plus invitees. */
+  readonly seatsTaken = computed(() => (this.draft()?.invitees.length ?? 0) + 1);
+  readonly roomFull = computed(() => !this.draft()?.online && this.seatsTaken() >= this.seatCapacity());
+  /** Going back to in-room only would overbook the room, so the switch stays on until people are removed. */
+  readonly onlineLocked = computed(() => {
+    const d = this.draft();
+    return !!d && d.online && d.invitees.length > inviteLimit(this.seatCapacity(), false);
+  });
+
   constructor() {
     const mq = window.matchMedia(MOBILE_QUERY);
     this.isMobile.set(mq.matches);
@@ -153,7 +172,9 @@ export class Kalender {
           endTime: toTime(template.end),
           title: template.title,
           invitees: [...template.invitees],
+          online: template.online,
         });
+        this.moreOpen.set(template.online);
         this.step.set('form');
       }
     });
@@ -203,7 +224,8 @@ export class Kalender {
     this.confirmed.set(null);
     this.conflict.set(null);
     this.step.set('form');
-    this.draft.set({ roomId: r.id, date: slotStart, startTime: toTime(slotStart), endTime: toTime(end), title: '', invitees: [] });
+    this.moreOpen.set(false);
+    this.draft.set({ roomId: r.id, date: slotStart, startTime: toTime(slotStart), endTime: toTime(end), title: '', invitees: [], online: false });
   }
 
   searchInvitees(event: AutoCompleteCompleteEvent): void {
@@ -222,6 +244,27 @@ export class Kalender {
   patchDraft(patch: Partial<BookingDraft>): void {
     this.draft.update((d) => (d ? { ...d, ...patch } : d));
     this.conflict.set(null);
+  }
+
+  /** Accepts the new invitee list up to the room's seats; anything beyond is dropped with a warning. */
+  setInvitees(list: Invitee[]): void {
+    const d = this.draft();
+    if (!d) return;
+    const max = inviteLimit(this.seatCapacity(), d.online);
+    if (list.length > max) {
+      const { summary, detail } = seatLimitWarning(this.seatCapacity());
+      this.notify.warn(detail, summary);
+      this.moreOpen.set(true);
+      // A fresh array makes the autocomplete drop the chip it already added.
+      this.patchDraft({ invitees: list.slice(0, max) });
+      return;
+    }
+    this.patchDraft({ invitees: list });
+  }
+
+  setOnline(online: boolean): void {
+    if (!online && this.onlineLocked()) return;
+    this.patchDraft({ online });
   }
 
   review(): void {
