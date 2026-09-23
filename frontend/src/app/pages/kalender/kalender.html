@@ -219,13 +219,12 @@
           <small class="hint">Eingeladene sehen den Termin unter „Benachrichtigungen“ und können zu- oder absagen.</small>
         </div>
 
-        <details class="form__more">
-          <summary>Weitere Angaben (optional)</summary>
+        <app-collapsible title="Weitere Angaben" hint="optional" class="form__more">
           <div class="field">
             <label for="titel">Titel der Besprechung</label>
             <input pInputText id="titel" [ngModel]="d.title" (ngModelChange)="patchDraft({ title: $event })" placeholder="z. B. Monatsabschluss">
           </div>
-        </details>
+        </app-collapsible>
       } @else {
         <dl class="summary">
           <dt>Raum</dt><dd>{{ roomName(d.roomId) }}</dd>

@@ -17,6 +17,7 @@ import { DataService, combine } from '../../core/data.service';
 import { Booking, BookingDraft, Invitee, Room } from '../../core/models';
 import { Notify } from '../../core/notify.service';
 import { BookingDetail } from '../../shared/booking-detail/booking-detail';
+import { Collapsible } from '../../shared/collapsible/collapsible';
 import { EmptyState } from '../../shared/empty-state/empty-state';
 import { WeekCalendar } from '../../shared/week-calendar/week-calendar';
 
@@ -47,6 +48,7 @@ const CAPACITY_OPTIONS = [
     SelectModule,
     TagModule,
     BookingDetail,
+    Collapsible,
     EmptyState,
     WeekCalendar,
   ],
