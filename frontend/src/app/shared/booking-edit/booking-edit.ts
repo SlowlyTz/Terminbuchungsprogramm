@@ -6,23 +6,28 @@ import { ButtonModule } from '@openng/optimus-ui/button';
 import { DialogModule } from '@openng/optimus-ui/dialog';
 import { InputTextModule } from '@openng/optimus-ui/inputtext';
 import { MessageModule } from '@openng/optimus-ui/message';
+import { ToggleSwitchModule } from '@openng/optimus-ui/toggleswitch';
 
 import { AdminDataService } from '../../core/admin-data.service';
 import { AuthService } from '../../core/auth.service';
 import { DataService, combine } from '../../core/data.service';
 import { Booking, Invitee } from '../../core/models';
+import { Notify } from '../../core/notify.service';
+import { inviteLimit, seatLimitWarning } from '../../core/seats';
+import { Collapsible } from '../collapsible/collapsible';
 
 interface EditDraft {
   startTime: string;
   endTime: string;
   title: string;
   invitees: Invitee[];
+  online: boolean;
 }
 
 /** Edit dialog for an existing booking: time, title and invitees. */
 @Component({
   selector: 'app-booking-edit',
-  imports: [DatePipe, FormsModule, AutoCompleteModule, ButtonModule, DialogModule, InputTextModule, MessageModule],
+  imports: [DatePipe, FormsModule, AutoCompleteModule, ButtonModule, DialogModule, InputTextModule, MessageModule, ToggleSwitchModule, Collapsible],
   templateUrl: './booking-edit.html',
   styleUrl: './booking-edit.scss',
 })
@@ -30,6 +35,7 @@ export class BookingEdit {
   private readonly data = inject(DataService);
   private readonly admin = inject(AdminDataService);
   private readonly auth = inject(AuthService);
+  private readonly notify = inject(Notify);
 
   readonly booking = input<Booking | null>(null);
 
@@ -44,6 +50,19 @@ export class BookingEdit {
   readonly roomName = computed(() => {
     const b = this.booking();
     return b ? (this.data.roomById().get(b.roomId)?.name ?? '') : '';
+  });
+
+  // --- Seats (same rules as when booking) --------------------------------------
+  readonly moreOpen = signal(false);
+  readonly seatCapacity = computed(() => {
+    const b = this.booking();
+    return b ? (this.data.roomById().get(b.roomId)?.capacity ?? 0) : 0;
+  });
+  readonly seatsTaken = computed(() => (this.draft()?.invitees.length ?? 0) + 1);
+  readonly roomFull = computed(() => !this.draft()?.online && this.seatsTaken() >= this.seatCapacity());
+  readonly onlineLocked = computed(() => {
+    const d = this.draft();
+    return !!d && d.online && d.invitees.length > inviteLimit(this.seatCapacity(), false);
   });
 
   readonly start = computed(() => {
@@ -69,6 +88,7 @@ export class BookingEdit {
     if (!b || !d) return true;
     return (
       d.title === b.title &&
+      d.online === b.online &&
       d.startTime === toTime(b.start) &&
       d.endTime === toTime(b.end) &&
       d.invitees.length === b.invitees.length &&
@@ -81,8 +101,9 @@ export class BookingEdit {
     effect(() => {
       const b = this.booking();
       this.conflict.set(null);
+      this.moreOpen.set(!!b?.online);
       this.draft.set(
-        b ? { startTime: toTime(b.start), endTime: toTime(b.end), title: b.title, invitees: [...b.invitees] } : null,
+        b ? { startTime: toTime(b.start), endTime: toTime(b.end), title: b.title, invitees: [...b.invitees], online: b.online } : null,
       );
     });
   }
@@ -90,6 +111,26 @@ export class BookingEdit {
   patch(patch: Partial<EditDraft>): void {
     this.draft.update((d) => (d ? { ...d, ...patch } : d));
     this.conflict.set(null);
+  }
+
+  /** Accepts the new invitee list up to the room's seats; anything beyond is dropped with a warning. */
+  setInvitees(list: Invitee[]): void {
+    const d = this.draft();
+    if (!d) return;
+    const max = inviteLimit(this.seatCapacity(), d.online);
+    if (list.length > max) {
+      const { summary, detail } = seatLimitWarning(this.seatCapacity());
+      this.notify.warn(detail, summary);
+      this.moreOpen.set(true);
+      this.patch({ invitees: list.slice(0, max) });
+      return;
+    }
+    this.patch({ invitees: list });
+  }
+
+  setOnline(online: boolean): void {
+    if (!online && this.onlineLocked()) return;
+    this.patch({ online });
   }
 
   searchInvitees(event: AutoCompleteCompleteEvent): void {
@@ -119,7 +160,7 @@ export class BookingEdit {
       return;
     }
 
-    const updated = this.data.update(b.id, { start: s, end: e, title: d.title, invitees: d.invitees });
+    const updated = this.data.update(b.id, { start: s, end: e, title: d.title, invitees: d.invitees, online: d.online });
     if (updated) this.saved.emit(updated);
   }
 

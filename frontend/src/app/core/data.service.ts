@@ -27,8 +27,8 @@ function mondayOffset(): number {
 function seedBookings(): Booking[] {
   const m = mondayOffset();
   let id = 1;
-  const b = (roomId: number, userId: number, userName: string, title: string, day: number, sh: number, sm: number, eh: number, em: number, invitees: Invitee[] = []): Booking => ({
-    id: id++, roomId, userId, userName, title, start: at(m + day, sh, sm), end: at(m + day, eh, em), invitees, online: false,
+  const b = (roomId: number, userId: number, userName: string, title: string, day: number, sh: number, sm: number, eh: number, em: number, invitees: Invitee[] = [], online = false): Booking => ({
+    id: id++, roomId, userId, userName, title, start: at(m + day, sh, sm), end: at(m + day, eh, em), invitees, online,
   });
   return [
     b(1, 2, 'Harald Weizmann', 'Monatsabschluss Buchhaltung', 1, 10, 0, 12, 0),
@@ -52,10 +52,10 @@ function seedBookings(): Booking[] {
     b(2, 1, 'Felix Brandt', 'Code-Review Buchungsmodul', 2, 11, 0, 12, 0, [
       { id: 8, name: 'Jonas Pfeiffer', department: 'IT', status: 'accepted' },
       { id: 4, name: 'Tom Reuter', department: 'Personal', status: 'open' },
-    ]),
+    ], true),
     b(2, 3, 'Sabine Kern', 'Telefonkonferenz', 0, 15, 0, 16, 0),
     b(5, 2, 'Harald Weizmann', 'Abstimmung Jahresabschluss', 3, 8, 30, 10, 0),
-    b(6, 4, 'Tom Reuter', 'Video-Call Standort Berlin', 1, 11, 0, 12, 30),
+    b(6, 4, 'Tom Reuter', 'Video-Call Standort Berlin', 1, 11, 0, 12, 30, [], true),
     b(1, 2, 'Harald Weizmann', 'Monatsabschluss Buchhaltung', 8, 9, 0, 11, 0),
     b(3, 5, 'Geschäftsleitung', 'Strategie-Workshop', 7, 9, 0, 16, 0),
   ];
@@ -119,7 +119,7 @@ export class DataService {
     return booking;
   }
 
-  update(id: number, changes: Pick<Booking, 'start' | 'end' | 'title' | 'invitees'>): Booking | undefined {
+  update(id: number, changes: Pick<Booking, 'start' | 'end' | 'title' | 'invitees' | 'online'>): Booking | undefined {
     let updated: Booking | undefined;
     this._bookings.update((list) =>
       list.map((b) => {

@@ -14,9 +14,41 @@
 
 :host ::ng-deep p-message { display: block; margin-bottom: 1rem; }
 
-.hint {
-  color: var(--p-text-muted-color);
+.edit__more {
+  margin-top: 0.5rem;
+
+  input { width: 100%; }
+}
+
+.seats {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
   font-size: 0.875rem;
+  color: var(--p-text-muted-color);
+
+  &--full { color: var(--p-orange-600, #ea580c); font-weight: 600; }
+}
+
+:root.app-dark .seats--full { color: var(--p-orange-400, #fb923c); }
+
+.online {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--p-content-border-color);
+
+  label { font-weight: 600; cursor: pointer; }
+}
+
+.online__text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+
+  small { color: var(--p-text-muted-color); font-size: 0.875rem; }
 }
 
 .invitee-option {

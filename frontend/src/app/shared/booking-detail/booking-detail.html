@@ -43,6 +43,11 @@
           }
         </dd>
 
+        @if (b.online) {
+          <dt><i class="pi pi-video" aria-hidden="true"></i> Videokonferenz</dt>
+          <dd>Ja, Teilnehmende können auch online dazukommen.</dd>
+        }
+
         <dt><i class="pi pi-user" aria-hidden="true"></i> Gebucht von</dt>
         <dd>{{ isOwn() ? b.userName + ' (Sie)' : b.userName }}</dd>
 
