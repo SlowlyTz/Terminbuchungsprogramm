@@ -185,7 +185,7 @@ export class Kalender {
       const current = this.room();
       if (current && !this.rooms().some((r) => r.id === current.id)) {
         this.room.set(null);
-        this.notify.info(`Raum ${current.name} passt nicht mehr zu den Filtern und wurde abgewählt.`);
+        this.notify.info(`Raum ${current.name} passt nicht zu den Filtern.`, 'Raum abgewählt');
       }
     });
   }

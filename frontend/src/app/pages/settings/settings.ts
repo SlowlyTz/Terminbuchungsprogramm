@@ -14,12 +14,11 @@ import { Notify } from '../../core/notify.service';
     <div class="page">
       <header class="page-header">
         <h1>Einstellungen</h1>
-        <p>Persönliche Einstellungen für {{ auth.user().name }}.</p>
       </header>
 
       <p-card header="Benachrichtigungen">
         <div class="row">
-          <label for="mail">Bestätigung per E-Mail nach jeder Buchung</label>
+          <label for="mail">E-Mail-Bestätigung bei jeder Buchung</label>
           <p-toggleswitch inputId="mail" [ngModel]="mail" (ngModelChange)="setMail($event)" />
         </div>
       </p-card>
@@ -36,7 +35,7 @@ import { Notify } from '../../core/notify.service';
         <div class="row">
           <div>
             <label for="fehler">Ladefehler simulieren</label>
-            <p class="hint">Zeigt sofort die Fehleransicht, die sonst bei einer abgerissenen Verbindung erscheint.</p>
+            <p class="hint">Zeigt die Fehleransicht bei abgerissener Verbindung.</p>
           </div>
           <p-toggleswitch inputId="fehler" [ngModel]="boot.simulateError()" (ngModelChange)="simulateError($event)" />
         </div>
@@ -71,13 +70,13 @@ export class Settings {
 
   setMail(on: boolean): void {
     this.mail = on;
-    this.notify.success(on ? 'Sie erhalten künftig eine Bestätigung per E-Mail.' : 'Bestätigungen per E-Mail sind ausgeschaltet.', 'Gespeichert');
+    this.notify.success(on ? 'E-Mail-Bestätigung eingeschaltet.' : 'E-Mail-Bestätigung ausgeschaltet.', 'Gespeichert');
   }
 
   /** Switching this on reloads straight away, so the error screen is visible at once. */
   simulateError(on: boolean): void {
     this.boot.simulateError.set(on);
     if (on) this.boot.start();
-    else this.notify.info('Die nächste Ladeaktion läuft wieder normal.');
+    else this.notify.info('Ladefehler ausgeschaltet.');
   }
 }

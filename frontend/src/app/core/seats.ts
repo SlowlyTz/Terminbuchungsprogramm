@@ -6,9 +6,9 @@ export function seatLimit(capacity: number): number {
 /** Toast shown when someone tries to invite more people to the room than it holds. */
 export function seatLimitWarning(capacity: number, online: boolean): { summary: string; detail: string } {
   return {
-    summary: `In diesem Raum ist nur Platz für ${capacity} ${capacity === 1 ? 'Person' : 'Personen'}.`,
+    summary: 'Raum ist voll',
     detail: online
-      ? 'Weitere Teilnehmende bitte unter „Online zugeschaltet“ einladen.'
-      : 'Weitere Teilnehmende können per Videokonferenz zugeschaltet werden (unter „Weitere Angaben“).',
+      ? `Nur ${capacity} Plätze. Weitere Personen unter „Online zugeschaltet“ einladen.`
+      : `Nur ${capacity} Plätze. Weitere Personen per Videokonferenz zuschalten.`,
   };
 }

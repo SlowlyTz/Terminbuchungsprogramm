@@ -10,7 +10,6 @@ import { SelectModule } from '@openng/optimus-ui/select';
 
 import { AdminDataService } from '../../core/admin-data.service';
 import { AuthService } from '../../core/auth.service';
-import { Notify } from '../../core/notify.service';
 import { AdminUser, ROLE_LABELS, Role } from '../../core/models';
 
 interface Draft {
@@ -30,7 +29,6 @@ interface Draft {
 export class AdminUserNew {
   private readonly admin = inject(AdminDataService);
   private readonly auth = inject(AuthService);
-  private readonly notify = inject(Notify);
 
   readonly roleLabels = ROLE_LABELS;
   readonly departments = this.admin.departments;
@@ -63,7 +61,6 @@ export class AdminUserNew {
     );
     this.reviewOpen.set(false);
     this.created.set(user);
-    this.notify.success(`${user.firstName} ${user.lastName} kann sich jetzt anmelden.`, 'Benutzer angelegt');
     queueMicrotask(() => document.getElementById('benutzer-angelegt')?.focus());
   }
 

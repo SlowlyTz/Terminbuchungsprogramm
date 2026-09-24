@@ -32,11 +32,11 @@ export class Notifications {
 
   accept(i: Invitation): void {
     this.notifications.respond(i.id, 'accepted');
-    this.notify.success(`Sie haben „${i.title}“ zugesagt. Der Termin steht jetzt in Ihrer Übersicht.`, 'Zugesagt');
+    this.notify.success(`„${i.title}“ steht jetzt in Ihren Terminen.`, 'Zugesagt');
   }
 
   decline(i: Invitation): void {
     this.notifications.respond(i.id, 'declined');
-    this.notify.info(`Sie haben „${i.title}“ abgesagt. ${i.fromName} wird benachrichtigt.`, 'Abgesagt');
+    this.notify.info(`${i.fromName} wird benachrichtigt.`, 'Abgesagt');
   }
 }

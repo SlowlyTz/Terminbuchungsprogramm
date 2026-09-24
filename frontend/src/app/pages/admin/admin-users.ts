@@ -133,7 +133,7 @@ export class AdminUsers {
       if (u.id === this.auth.user().id) this.auth.setAdmin(d.role === 'admin');
     }
 
-    this.notify.success(`${d.firstName} ${d.lastName} wurde aktualisiert.`, 'Benutzer gespeichert');
+    this.notify.success(`${d.firstName} ${d.lastName}.`, 'Änderungen gespeichert');
     this.editing.set(null);
     this.draft.set(null);
   }

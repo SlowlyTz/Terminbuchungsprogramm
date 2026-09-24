@@ -112,12 +112,12 @@ export class AdminRooms {
     if (this.isNew()) {
       const created = this.data.createRoom(values);
       this.admin.log(actor, 'room_created', `${created.name} (${created.floor}), ${created.capacity} Plätze`);
-      this.notify.success(`Raum ${created.name} wurde angelegt.`, 'Raum gespeichert');
+      this.notify.success(`Raum ${created.name} kann jetzt gebucht werden.`, 'Raum angelegt');
     } else {
       const updated = this.data.updateRoom(this.editingId()!, values);
       if (updated) {
         this.admin.log(actor, 'room_changed', `${updated.name} (${updated.floor}), ${updated.capacity} Plätze`);
-        this.notify.success(`Raum ${updated.name} wurde geändert.`, 'Raum gespeichert');
+        this.notify.success(`Raum ${updated.name}.`, 'Änderungen gespeichert');
       }
     }
     this.editingId.set(null);

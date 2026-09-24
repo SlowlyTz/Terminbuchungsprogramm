@@ -51,7 +51,7 @@ export class MyBookings {
   onSaved(b: Booking): void {
     this.editing.set(null);
     this.admin.log(this.auth.user().name, 'booking_changed', details(this.roomName(b.roomId), b));
-    this.notify.success(`„${b.title}“ wurde auf ${time(b.start)}–${time(b.end)} Uhr geändert.`, 'Buchung geändert');
+    this.notify.success(`„${b.title}“, ${time(b.start)}–${time(b.end)} Uhr.`, 'Buchung gespeichert');
   }
 
   askCancel(b: Booking): void {
@@ -64,7 +64,7 @@ export class MyBookings {
     if (!b) return;
     this.data.cancel(b.id);
     this.admin.log(this.auth.user().name, 'booking_cancelled', details(this.roomName(b.roomId), b));
-    this.notify.success(`„${b.title}“ in Raum ${this.roomName(b.roomId)} wurde storniert.`, 'Buchung storniert');
+    this.notify.success(`„${b.title}“, Raum ${this.roomName(b.roomId)}.`, 'Buchung storniert');
     this.toCancel.set(null);
   }
 }
