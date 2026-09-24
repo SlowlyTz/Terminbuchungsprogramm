@@ -1,4 +1,146 @@
+# Abhängigkeiten
 node_modules/
+jspm_packages/
+.pnp.*
+.yarn/*
+!.yarn/releases
+!.yarn/plugins
+
+# Build-Ausgaben, Caches
 frontend/dist/
 frontend/.angular/
+dist/
+build/
+out/
+out-tsc/
+tmp/
+.cache/
+.parcel-cache/
+.eslintcache
+.stylelintcache
+.sass-cache/
+*.tsbuildinfo
+*.map
+
+# Umgebungsvariablen, Secrets
 .env
+.env.*
+!.env.example
+!.env.sample
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+secrets/
+credentials.json
+
+# Logs, Prozess-Dateien
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+*.pid
+*.seed
+*.pid.lock
+testem.log
+libpeerconnection.log
+
+# PM2 (ecosystem.config.cjs bleibt im Repo)
+.pm2/
+
+# Tests
+coverage/
+.nyc_output/
+test-results/
+playwright-report/
+playwright/.cache/
+cypress/videos/
+cypress/screenshots/
+__screenshots__/
+junit.xml
+
+# Datenbankschema und Seeds
+*.sqlite
+*.sqlite3
+*.db
+*.db-journal
+*.bak
+*.dump
+dump/
+backup/
+backups/
+db/local/
+db/*.local.sql
+db/dump*.sql
+
+# Uploads / Laufzeitdaten
+uploads/
+backend/uploads/
+backend/tmp/
+
+# ---------------------------------------------------------------------
+# Editoren & IDEs
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.slnx.user
+
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+!.vscode/mcp.json
+.history/
+*.code-workspace
+
+.idea/
+*.iml
+*.iws
+*.ipr
+
+.project
+.classpath
+.settings/
+.c9/
+*.launch
+*.sublime-workspace
+*.sublime-project
+*.swp
+*.swo
+*~
+.fleet/
+# ---------------------------------------------------------------------
+
+# ai-Tools
+.claude/
+CLAUDE.local.md
+.cursor/
+.aider*
+.continue/
+
+# OS spezifisch
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+.directory
+.Trash-*
+.nfs*
+
+# Archive, Packages
+*.zip
+*.rar
+*.7z
+*.tar
+*.tar.gz
+*.tgz
