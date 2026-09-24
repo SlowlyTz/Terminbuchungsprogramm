@@ -19,6 +19,9 @@
           >
             <i [class]="item.icon" aria-hidden="true"></i>
             <span>{{ item.label }}</span>
+            @if (item.link === '/benachrichtigungen' && notifications.unreadCount() > 0) {
+              <span class="count-badge" [attr.aria-label]="notifications.unreadCount() + ' offene Einladungen'">{{ notifications.unreadCount() }}</span>
+            }
           </a>
         </li>
       }
@@ -38,9 +41,6 @@
       <span class="sidebar__profile-text">
         <span class="sidebar__profile-name">
           {{ user().name }}
-          @if (notifications.unreadCount() > 0) {
-            <span class="count-badge count-badge--pulse" [attr.aria-label]="notifications.unreadCount() + ' neue Benachrichtigungen'">{{ notifications.unreadCount() }}</span>
-          }
         </span>
         <span class="sidebar__profile-role">{{ user().role }}</span>
       </span>
@@ -57,14 +57,6 @@
             <span class="theme-item__label">{{ item.label }}</span>
             <span class="theme-item__switch" [class.is-on]="theme.dark()"><span class="theme-item__knob"></span></span>
           </button>
-        } @else if (item.id === 'notifications') {
-          <a class="menu-item" [routerLink]="item.routerLink" role="menuitem">
-            <i [class]="item.icon" aria-hidden="true"></i>
-            <span class="menu-item__label">{{ item.label }}</span>
-            @if (notifications.unreadCount() > 0) {
-              <span class="count-badge" [attr.aria-label]="notifications.unreadCount() + ' neue'">{{ notifications.unreadCount() }}</span>
-            }
-          </a>
         } @else if (item.routerLink) {
           <a class="menu-item" [routerLink]="item.routerLink" role="menuitem">
             <i [class]="item.icon" aria-hidden="true"></i>
@@ -81,18 +73,3 @@
   </div>
 </div>
 
-<p-dialog
-  header="Abmelden?"
-  [visible]="logoutOpen()"
-  (visibleChange)="logoutOpen.set($event)"
-  [modal]="true"
-  [draggable]="false"
-  [style]="{ width: '26rem' }"
-  [breakpoints]="{ '600px': '95vw' }"
->
-  <p>Sie werden abgemeldet und kehren zur Anmeldung zurück. Nicht abgeschickte Eingaben gehen verloren.</p>
-  <ng-template #footer>
-    <p-button label="Angemeldet bleiben" severity="secondary" [outlined]="true" (onClick)="logoutOpen.set(false)" />
-    <p-button label="Abmelden" icon="pi pi-sign-out" (onClick)="confirmLogout()" />
-  </ng-template>
-</p-dialog>

@@ -3,7 +3,6 @@ import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { MenuItem } from '@openng/optimus-ui/api';
 import { AvatarModule } from '@openng/optimus-ui/avatar';
 import { ButtonModule } from '@openng/optimus-ui/button';
-import { DialogModule } from '@openng/optimus-ui/dialog';
 import { MenuModule } from '@openng/optimus-ui/menu';
 
 import { AuthService } from '../../core/auth.service';
@@ -20,7 +19,7 @@ interface NavItem {
 
 @Component({
   selector: 'app-sidebar',
-  imports: [RouterLink, RouterLinkActive, AvatarModule, ButtonModule, DialogModule, MenuModule],
+  imports: [RouterLink, RouterLinkActive, AvatarModule, ButtonModule, MenuModule],
   templateUrl: './sidebar.html',
   styleUrl: './sidebar.scss',
 })
@@ -39,17 +38,16 @@ export class Sidebar {
 
   /** Drives the icon animation; toggled on every theme switch. */
   readonly themeSpin = signal(false);
-  readonly logoutOpen = signal(false);
 
   readonly nav: NavItem[] = [
     { label: 'Start', icon: 'pi pi-home', link: '/', exact: true },
     { label: 'Kalender', icon: 'pi pi-calendar-plus', link: '/kalender' },
     { label: 'Meine Buchungen', icon: 'pi pi-list', link: '/meine-buchungen' },
+    { label: 'Benachrichtigungen', icon: 'pi pi-bell', link: '/benachrichtigungen' },
   ];
 
   // Opens upward automatically: the trigger sits at the bottom of the viewport.
   readonly profileMenu = computed<MenuItem[]>(() => [
-    { id: 'notifications', label: 'Benachrichtigungen', icon: 'pi pi-bell', routerLink: '/benachrichtigungen' },
     { label: 'Einstellungen', icon: 'pi pi-cog', routerLink: '/einstellungen' },
     { label: 'Verwaltung', icon: 'pi pi-shield', routerLink: '/verwaltung', visible: this.auth.isAdmin() },
     { separator: true },
@@ -60,7 +58,7 @@ export class Sidebar {
       command: () => this.toggleTheme(),
     },
     { separator: true },
-    { label: 'Abmelden', icon: 'pi pi-sign-out', command: () => this.logoutOpen.set(true) },
+    { label: 'Abmelden', icon: 'pi pi-sign-out', command: () => this.logout() },
   ]);
 
   /** Called from the custom item template; keeps the menu open by swallowing the menu's own click handling. */
@@ -70,8 +68,8 @@ export class Sidebar {
     this.toggleTheme();
   }
 
-  confirmLogout(): void {
-    this.logoutOpen.set(false);
+  /** Signing out is harmless and quickly undone, so it needs no confirmation. */
+  logout(): void {
     this.auth.logout();
     // So the next sign-in shows the loading skeleton again.
     this.boot.reset();
