@@ -1,7 +1,7 @@
 import { DatePipe } from '@angular/common';
 import { Component, DestroyRef, computed, effect, inject, input, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { AutoCompleteCompleteEvent, AutoCompleteModule } from '@openng/optimus-ui/autocomplete';
 import { ButtonModule } from '@openng/optimus-ui/button';
 import { DialogModule } from '@openng/optimus-ui/dialog';
@@ -10,15 +10,17 @@ import { MessageModule } from '@openng/optimus-ui/message';
 import { MultiSelectModule } from '@openng/optimus-ui/multiselect';
 import { SelectModule } from '@openng/optimus-ui/select';
 import { TagModule } from '@openng/optimus-ui/tag';
+import { ToggleSwitchModule } from '@openng/optimus-ui/toggleswitch';
 
 import { AdminDataService } from '../../core/admin-data.service';
 import { AuthService } from '../../core/auth.service';
 import { DataService, combine } from '../../core/data.service';
 import { Booking, BookingDraft, Invitee, Room } from '../../core/models';
 import { Notify } from '../../core/notify.service';
+import { seatLimit, seatLimitWarning } from '../../core/seats';
 import { BookingDetail } from '../../shared/booking-detail/booking-detail';
+import { Collapsible } from '../../shared/collapsible/collapsible';
 import { EmptyState } from '../../shared/empty-state/empty-state';
-import { InfoBox } from '../../shared/info-box/info-box';
 import { WeekCalendar } from '../../shared/week-calendar/week-calendar';
 
 const MOBILE_QUERY = '(max-width: 767px)';
@@ -38,7 +40,6 @@ const CAPACITY_OPTIONS = [
   imports: [
     DatePipe,
     FormsModule,
-    RouterLink,
     AutoCompleteModule,
     ButtonModule,
     DialogModule,
@@ -47,9 +48,10 @@ const CAPACITY_OPTIONS = [
     MultiSelectModule,
     SelectModule,
     TagModule,
+    ToggleSwitchModule,
     BookingDetail,
+    Collapsible,
     EmptyState,
-    InfoBox,
     WeekCalendar,
   ],
   templateUrl: './kalender.html',
@@ -60,6 +62,7 @@ export class Kalender {
   private readonly data = inject(DataService);
   private readonly admin = inject(AdminDataService);
   private readonly notify = inject(Notify);
+  private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
 
   // Query params bound by the router: ?raum=<id>&vorlage=<bookingId>
@@ -116,7 +119,7 @@ export class Kalender {
     return r ? this.data.bookings().filter((b) => b.roomId === r.id) : [];
   });
   readonly roomName = (id: number) => this.data.roomById().get(id)?.name ?? '';
-  readonly inviteeNames = (b: Booking) => b.invitees.map((i) => i.name).join(', ');
+  readonly names = (list: Invitee[]) => list.map((i) => i.name).join(', ');
 
   readonly draftStart = computed(() => {
     const d = this.draft();
@@ -130,6 +133,22 @@ export class Kalender {
     const s = this.draftStart();
     const e = this.draftEnd();
     return !s || !e || e <= s;
+  });
+
+  // --- Seats -----------------------------------------------------------------
+  /** "Weitere Angaben" section; opened when the seat limit is hit so the video switch is in view. */
+  readonly moreOpen = signal(false);
+  readonly seatCapacity = computed(() => {
+    const d = this.draft();
+    return d ? (this.data.roomById().get(d.roomId)?.capacity ?? 0) : 0;
+  });
+  /** Organiser plus the people invited to the room; online participants take no seat. */
+  readonly seatsTaken = computed(() => (this.draft()?.invitees.length ?? 0) + 1);
+  readonly roomFull = computed(() => this.seatsTaken() >= this.seatCapacity());
+  /** Switching the video conference off would drop the online participants, so it waits until they are removed. */
+  readonly onlineLocked = computed(() => {
+    const d = this.draft();
+    return !!d && d.online && d.onlineInvitees.length > 0;
   });
 
   constructor() {
@@ -153,7 +172,10 @@ export class Kalender {
           endTime: toTime(template.end),
           title: template.title,
           invitees: [...template.invitees],
+          online: template.online,
+          onlineInvitees: [...template.onlineInvitees],
         });
+        this.moreOpen.set(template.online);
         this.step.set('form');
       }
     });
@@ -203,12 +225,15 @@ export class Kalender {
     this.confirmed.set(null);
     this.conflict.set(null);
     this.step.set('form');
-    this.draft.set({ roomId: r.id, date: slotStart, startTime: toTime(slotStart), endTime: toTime(end), title: '', invitees: [] });
+    this.moreOpen.set(false);
+    this.draft.set({ roomId: r.id, date: slotStart, startTime: toTime(slotStart), endTime: toTime(end), title: '', invitees: [], online: false, onlineInvitees: [] });
   }
 
   searchInvitees(event: AutoCompleteCompleteEvent): void {
     const q = event.query.trim().toLowerCase();
-    const chosen = new Set(this.draft()?.invitees.map((i) => i.id) ?? []);
+    // Nobody can be in the room and online at once, so both lists are excluded.
+    const d = this.draft();
+    const chosen = new Set([...(d?.invitees ?? []), ...(d?.onlineInvitees ?? [])].map((i) => i.id));
     this.suggestions.set(
       this.admin
         .users()
@@ -222,6 +247,32 @@ export class Kalender {
   patchDraft(patch: Partial<BookingDraft>): void {
     this.draft.update((d) => (d ? { ...d, ...patch } : d));
     this.conflict.set(null);
+  }
+
+  /** Accepts the people for the room up to its seats; anything beyond is dropped with a warning. */
+  setInvitees(list: Invitee[]): void {
+    const d = this.draft();
+    if (!d) return;
+    const max = seatLimit(this.seatCapacity());
+    if (list.length > max) {
+      const { summary, detail } = seatLimitWarning(this.seatCapacity(), d.online);
+      this.notify.warn(detail, summary);
+      this.moreOpen.set(true);
+      // A fresh array makes the autocomplete drop the chip it already added.
+      this.patchDraft({ invitees: list.slice(0, max) });
+      return;
+    }
+    this.patchDraft({ invitees: list });
+  }
+
+  /** Online participants are not limited by the room. */
+  setOnlineInvitees(list: Invitee[]): void {
+    this.patchDraft({ onlineInvitees: list });
+  }
+
+  setOnline(online: boolean): void {
+    if (!online && this.onlineLocked()) return;
+    this.patchDraft({ online });
   }
 
   review(): void {
@@ -243,9 +294,13 @@ export class Kalender {
     const booking = this.data.create(d, this.user().id, this.user().name);
     this.admin.log(this.user().name, 'booking_created', auditDetails(this.roomName(booking.roomId), booking));
     this.draft.set(null);
+    // The confirmation popup replaces the toast; both at once would say the same thing twice.
     this.confirmed.set(booking);
-    this.notify.success(`Raum ${this.roomName(booking.roomId)} ist für Sie reserviert.`, 'Buchung eingetragen');
-    queueMicrotask(() => document.getElementById('buchung-bestaetigt')?.focus());
+  }
+
+  goToMyBookings(): void {
+    this.confirmed.set(null);
+    this.router.navigate(['/meine-buchungen']);
   }
 
   cancelDraft(): void {

@@ -1,4 +1,4 @@
-import { DatePipe } from '@angular/common';
+import { DatePipe, NgTemplateOutlet } from '@angular/common';
 import { Component, computed, inject, input, output } from '@angular/core';
 import { ButtonModule } from '@openng/optimus-ui/button';
 import { DialogModule } from '@openng/optimus-ui/dialog';
@@ -17,7 +17,7 @@ const STATUS_META: Record<InvitationStatus, { label: string; icon: string; sever
 /** Read-only view of a booking; used by the calendar, my bookings and the dashboard. */
 @Component({
   selector: 'app-booking-detail',
-  imports: [DatePipe, ButtonModule, DialogModule, TagModule],
+  imports: [DatePipe, NgTemplateOutlet, ButtonModule, DialogModule, TagModule],
   templateUrl: './booking-detail.html',
   styleUrl: './booking-detail.scss',
 })

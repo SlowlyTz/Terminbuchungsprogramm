@@ -32,16 +32,11 @@
       }
 
       <div class="field">
-        <label for="edit-titel">Titel der Besprechung</label>
-        <input pInputText id="edit-titel" [ngModel]="d.title" (ngModelChange)="patch({ title: $event })" placeholder="z. B. Monatsabschluss">
-      </div>
-
-      <div class="field">
-        <label for="edit-teilnehmer">Teilnehmer</label>
+        <label for="edit-teilnehmer">Teilnehmer vor Ort</label>
         <p-autocomplete
           inputId="edit-teilnehmer"
           [ngModel]="d.invitees"
-          (ngModelChange)="patch({ invitees: $event })"
+          (ngModelChange)="setInvitees($event)"
           [suggestions]="suggestions()"
           (completeMethod)="searchInvitees($event)"
           optionLabel="name"
@@ -60,8 +55,63 @@
             </div>
           </ng-template>
         </p-autocomplete>
-        <small class="hint">Neu hinzugefügte Personen erhalten eine Einladung, entfernte eine Absage.</small>
+        <small class="seats" [class.seats--full]="roomFull()" aria-live="polite">
+          <i class="pi pi-users" aria-hidden="true"></i>
+          {{ seatsTaken() }} von {{ seatCapacity() }} Plätzen belegt (inklusive Ihnen)
+          @if (d.online) {
+            <span class="seats__online">· {{ d.onlineInvitees.length }} online</span>
+          }
+        </small>
       </div>
+
+      <app-collapsible title="Weitere Angaben" hint="optional" class="edit__more" [(open)]="moreOpen">
+        <div class="field">
+          <label for="edit-titel">Titel der Besprechung</label>
+          <input pInputText id="edit-titel" [ngModel]="d.title" (ngModelChange)="patch({ title: $event })" placeholder="z. B. Monatsabschluss">
+        </div>
+
+        <div class="online">
+          <div class="online__text">
+            <label for="edit-online">Auch per Videokonferenz verfügbar</label>
+            <small>
+              @if (onlineLocked()) {
+                Zum Ausschalten erst die Online-Teilnehmenden entfernen.
+              } @else {
+                Weitere Personen können online zugeschaltet werden, ohne einen Platz im Raum zu belegen.
+              }
+            </small>
+          </div>
+          <p-toggleswitch inputId="edit-online" [ngModel]="d.online" (ngModelChange)="setOnline($event)" [disabled]="onlineLocked()" />
+        </div>
+
+        @if (d.online) {
+          <div class="field online__people">
+            <label for="edit-online-teilnehmer">Online zugeschaltet</label>
+            <p-autocomplete
+              inputId="edit-online-teilnehmer"
+              [ngModel]="d.onlineInvitees"
+              (ngModelChange)="setOnlineInvitees($event)"
+              [suggestions]="suggestions()"
+              (completeMethod)="searchInvitees($event)"
+              optionLabel="name"
+              [multiple]="true"
+              [dropdown]="true"
+              [forceSelection]="true"
+              [minLength]="1"
+              placeholder="Name eingeben …"
+              appendTo="body"
+              styleClass="w-full"
+            >
+              <ng-template #item let-i>
+                <div class="invitee-option">
+                  <span>{{ i.name }}</span>
+                  <span class="invitee-option__meta">{{ i.department }}</span>
+                </div>
+              </ng-template>
+            </p-autocomplete>
+          </div>
+        }
+      </app-collapsible>
     }
   }
 

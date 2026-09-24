@@ -60,6 +60,9 @@ a { color: var(--p-primary-color); }
 
 .w-full { width: 100%; }
 
+// Switches sit next to text in flex rows; squeezed, their handle slides past the track.
+p-toggleswitch { flex-shrink: 0; }
+
 .visually-hidden {
   position: absolute;
   width: 1px;

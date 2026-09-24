@@ -27,8 +27,8 @@ function mondayOffset(): number {
 function seedBookings(): Booking[] {
   const m = mondayOffset();
   let id = 1;
-  const b = (roomId: number, userId: number, userName: string, title: string, day: number, sh: number, sm: number, eh: number, em: number, invitees: Invitee[] = []): Booking => ({
-    id: id++, roomId, userId, userName, title, start: at(m + day, sh, sm), end: at(m + day, eh, em), invitees,
+  const b = (roomId: number, userId: number, userName: string, title: string, day: number, sh: number, sm: number, eh: number, em: number, invitees: Invitee[] = [], online = false, onlineInvitees: Invitee[] = []): Booking => ({
+    id: id++, roomId, userId, userName, title, start: at(m + day, sh, sm), end: at(m + day, eh, em), invitees, online, onlineInvitees,
   });
   return [
     b(1, 2, 'Harald Weizmann', 'Monatsabschluss Buchhaltung', 1, 10, 0, 12, 0),
@@ -51,11 +51,15 @@ function seedBookings(): Booking[] {
     b(3, 4, 'Tom Reuter', 'Onboarding neue Mitarbeitende', 0, 10, 0, 12, 0),
     b(2, 1, 'Felix Brandt', 'Code-Review Buchungsmodul', 2, 11, 0, 12, 0, [
       { id: 8, name: 'Jonas Pfeiffer', department: 'IT', status: 'accepted' },
+    ], true, [
       { id: 4, name: 'Tom Reuter', department: 'Personal', status: 'open' },
     ]),
     b(2, 3, 'Sabine Kern', 'Telefonkonferenz', 0, 15, 0, 16, 0),
     b(5, 2, 'Harald Weizmann', 'Abstimmung Jahresabschluss', 3, 8, 30, 10, 0),
-    b(6, 4, 'Tom Reuter', 'Video-Call Standort Berlin', 1, 11, 0, 12, 30),
+    b(6, 4, 'Tom Reuter', 'Video-Call Standort Berlin', 1, 11, 0, 12, 30, [], true, [
+      { id: 3, name: 'Sabine Kern', department: 'Vertrieb', status: 'accepted' },
+      { id: 10, name: 'Daniel Voss', department: 'Vertrieb', status: 'open' },
+    ]),
     b(1, 2, 'Harald Weizmann', 'Monatsabschluss Buchhaltung', 8, 9, 0, 11, 0),
     b(3, 5, 'Geschäftsleitung', 'Strategie-Workshop', 7, 9, 0, 16, 0),
   ];
@@ -113,12 +117,14 @@ export class DataService {
       start,
       end,
       invitees: [...draft.invitees],
+      online: draft.online,
+      onlineInvitees: draft.online ? [...draft.onlineInvitees] : [],
     };
     this._bookings.update((list) => [...list, booking]);
     return booking;
   }
 
-  update(id: number, changes: Pick<Booking, 'start' | 'end' | 'title' | 'invitees'>): Booking | undefined {
+  update(id: number, changes: Pick<Booking, 'start' | 'end' | 'title' | 'invitees' | 'online' | 'onlineInvitees'>): Booking | undefined {
     let updated: Booking | undefined;
     this._bookings.update((list) =>
       list.map((b) => {

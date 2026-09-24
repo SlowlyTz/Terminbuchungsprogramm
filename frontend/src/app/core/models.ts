@@ -22,7 +22,12 @@ export interface Booking {
   title: string;
   start: Date;
   end: Date;
+  /** People attending in the room; limited by the room's capacity. */
   invitees: Invitee[];
+  /** Also held as a video conference. */
+  online: boolean;
+  /** People joining by video; they do not take a seat. */
+  onlineInvitees: Invitee[];
 }
 
 export interface BookingDraft {
@@ -32,6 +37,8 @@ export interface BookingDraft {
   endTime: string;
   title: string;
   invitees: Invitee[];
+  online: boolean;
+  onlineInvitees: Invitee[];
 }
 
 export type Role = 'nutzer' | 'admin';

@@ -31,10 +31,15 @@
           }
         </td>
         <td>
-          @if (b.invitees.length === 0) {
+          @if (b.invitees.length === 0 && b.onlineInvitees.length === 0) {
             <span class="muted">—</span>
           } @else {
-            <span class="muted">{{ b.invitees.length }} eingeladen</span>
+            <span class="muted">
+              {{ b.invitees.length }} vor Ort
+              @if (b.online) {
+                · <i class="pi pi-video" aria-hidden="true"></i> {{ b.onlineInvitees.length }} online
+              }
+            </span>
           }
         </td>
         <td class="actions">
@@ -78,8 +83,8 @@
         <strong>{{ b.title }}</strong><br>
         Raum {{ roomName(b.roomId) }}, {{ b.start | date: 'EEE d.MM.' }}, {{ b.start | date: 'HH:mm' }}–{{ b.end | date: 'HH:mm' }} Uhr
       </p>
-      @if (b.invitees.length > 0) {
-        <p>{{ b.invitees.length }} eingeladene {{ b.invitees.length === 1 ? 'Person wird' : 'Personen werden' }} über die Absage informiert.</p>
+      @if (invitedCount(b) > 0) {
+        <p>{{ invitedCount(b) }} eingeladene {{ invitedCount(b) === 1 ? 'Person wird' : 'Personen werden' }} über die Absage informiert.</p>
       }
       <p>Die Reservierung wird gelöscht und der Raum wieder freigegeben.</p>
     }

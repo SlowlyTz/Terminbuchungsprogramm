@@ -31,6 +31,8 @@ export class MyBookings {
   readonly bookings = computed(() => this.data.bookingsForUser(this.auth.user().id));
   readonly roomName = (id: number) => this.data.roomById().get(id)?.name ?? '';
   readonly isPast = (b: Booking) => b.end.getTime() < Date.now();
+  /** Everyone who gets a cancellation: people in the room and people joining online. */
+  readonly invitedCount = (b: Booking) => b.invitees.length + b.onlineInvitees.length;
 
   readonly detail = signal<Booking | null>(null);
   readonly editing = signal<Booking | null>(null);

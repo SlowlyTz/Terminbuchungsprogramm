@@ -46,23 +46,38 @@
         <dt><i class="pi pi-user" aria-hidden="true"></i> Gebucht von</dt>
         <dd>{{ isOwn() ? b.userName + ' (Sie)' : b.userName }}</dd>
 
-        <dt><i class="pi pi-users" aria-hidden="true"></i> Teilnehmer</dt>
+        <dt><i class="pi pi-users" aria-hidden="true"></i> Vor Ort</dt>
         <dd>
           @if (b.invitees.length === 0) {
-            <span class="detail__muted">Keine weiteren Teilnehmer eingeladen.</span>
+            <span class="detail__muted">Keine weiteren Teilnehmer im Raum.</span>
           } @else {
-            <ul class="detail__invitees">
-              @for (i of b.invitees; track i.id) {
-                <li>
-                  <span class="detail__invitee-name">{{ i.name }}</span>
-                  <span class="detail__muted">{{ i.department }}</span>
-                  <p-tag [value]="statusLabel(i.status)" [icon]="statusIcon(i.status)" [severity]="statusSeverity(i.status)" />
-                </li>
-              }
-            </ul>
+            <ng-container *ngTemplateOutlet="people; context: { $implicit: b.invitees }" />
           }
         </dd>
+
+        @if (b.online) {
+          <dt><i class="pi pi-video" aria-hidden="true"></i> Online</dt>
+          <dd>
+            @if (b.onlineInvitees.length === 0) {
+              <span class="detail__muted">Videokonferenz eingerichtet, noch niemand zugeschaltet.</span>
+            } @else {
+              <ng-container *ngTemplateOutlet="people; context: { $implicit: b.onlineInvitees }" />
+            }
+          </dd>
+        }
       </dl>
+
+      <ng-template #people let-list>
+        <ul class="detail__invitees">
+          @for (i of list; track i.id) {
+            <li>
+              <span class="detail__invitee-name">{{ i.name }}</span>
+              <span class="detail__muted">{{ i.department }}</span>
+              <p-tag [value]="statusLabel(i.status)" [icon]="statusIcon(i.status)" [severity]="statusSeverity(i.status)" />
+            </li>
+          }
+        </ul>
+      </ng-template>
     </article>
   }
 
