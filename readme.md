@@ -9,32 +9,29 @@ Stack: Angular 21 + Optimus UI · Express 5 (Node 22) · MariaDB 10.11
 ```
 backend/    Express-API, liefert den Angular-Build aus (Port 3000)
 frontend/   Angular-App
-db/         Schema, Migrationen, Seeds
-docs/       Personas, Stack-Entscheidung
-plan.md     Aufgabenverteilung
+db/         Schema, Seeds, ERD
+docs/       Personas, Stack-Entscheidung, Aufgabenplan
 ```
 
 ## Voraussetzungen
 
 Node 22, npm ≥ 11, MariaDB.
 
-## Schnellstart
-
-Aus dem Projektordner, ohne nach `frontend/` zu wechseln:
+## Start
 
 ```bash
-npm run start         # startet das Frontend, http://localhost:4200
+npm run start         # Frontend auf http://localhost:4200
 ```
 
-Beim ersten Mal vorher einmal `npm install` in `frontend/` ausführen.
+Beim ersten Mal vorher `npm install` in `frontend/` ausführen.
 
 ## Frontend
 
 ```bash
 cd frontend
 npm install
-npx ng serve          # http://localhost:4200
-npx ng build          # Build nach frontend/dist
+npm run start         # http://localhost:4200
+npm run build         # Build nach frontend/dist
 ```
 
 ## Backend
