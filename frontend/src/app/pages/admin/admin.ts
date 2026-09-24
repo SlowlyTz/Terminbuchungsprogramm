@@ -8,7 +8,6 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
     <div class="page">
       <header class="page-header">
         <h1>Verwaltung</h1>
-        <p>Räume, Benutzerkonten und Protokoll. Änderungen wirken sofort und werden im Audit-Log festgehalten.</p>
       </header>
 
       <nav class="subnav" aria-label="Bereiche der Verwaltung">

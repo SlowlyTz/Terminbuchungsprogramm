@@ -50,7 +50,7 @@
         <dt><i class="pi pi-users" aria-hidden="true"></i> Vor Ort</dt>
         <dd>
           @if (b.invitees.length === 0) {
-            <span class="detail__muted">Keine weiteren Teilnehmer im Raum.</span>
+            <span class="detail__muted">niemand eingeladen</span>
           } @else {
             <ng-container *ngTemplateOutlet="people; context: { $implicit: b.invitees }" />
           }
@@ -60,7 +60,7 @@
           <dt><i class="pi pi-video" aria-hidden="true"></i> Online</dt>
           <dd>
             @if (b.onlineInvitees.length === 0) {
-              <span class="detail__muted">Videokonferenz eingerichtet, noch niemand zugeschaltet.</span>
+              <span class="detail__muted">Videokonferenz, noch niemand zugeschaltet</span>
             } @else {
               <ng-container *ngTemplateOutlet="people; context: { $implicit: b.onlineInvitees }" />
             }

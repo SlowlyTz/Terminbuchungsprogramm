@@ -62,7 +62,6 @@
         <app-empty-state
           icon="pi pi-users"
           title="Kein Benutzer passt zu den Filtern"
-          text="Ändern Sie die Suche oder die Rollenauswahl."
           actionLabel="Filter zurücksetzen"
           actionIcon="pi pi-filter-slash"
           [compact]="true"
@@ -77,8 +76,8 @@
   header="Benutzer bearbeiten"
   [visible]="editing() !== null"
   (visibleChange)="!$event && editing.set(null)"
-  [dismissableMask]="true"
   [modal]="true"
+  [dismissableMask]="true"
   [draggable]="false"
   [style]="{ width: '34rem' }"
   [breakpoints]="{ '640px': '95vw' }"
@@ -122,14 +121,14 @@
 
     @if (losingOwnAdmin()) {
       <p-message severity="warn" icon="pi pi-exclamation-triangle">
-        Sie entziehen sich selbst die Admin-Rechte. Danach haben Sie keinen Zugang mehr zur Verwaltung.
+        Ohne Admin-Rechte verlieren Sie den Zugang zur Verwaltung.
       </p-message>
     }
   }
 
   <ng-template #footer>
     <p-button label="Abbrechen" severity="secondary" [outlined]="true" (onClick)="editing.set(null)" />
-    <p-button label="Änderungen speichern" icon="pi pi-check" (onClick)="save()" />
+    <p-button label="Speichern" icon="pi pi-check" (onClick)="save()" />
   </ng-template>
 </p-dialog>
 
@@ -137,8 +136,8 @@
   [header]="toToggle()?.active ? 'Konto sperren?' : 'Konto entsperren?'"
   [visible]="toToggle() !== null"
   (visibleChange)="!$event && toToggle.set(null)"
-  [dismissableMask]="true"
   [modal]="true"
+  [dismissableMask]="true"
   [draggable]="false"
   [style]="{ width: '30rem' }"
   [breakpoints]="{ '600px': '95vw' }"
@@ -146,9 +145,9 @@
   @if (toToggle(); as u) {
     <p><strong>{{ u.firstName }} {{ u.lastName }}</strong> · {{ u.department }} · {{ u.email }}</p>
     @if (u.active) {
-      <p>Das Konto wird gesperrt. Die Person kann sich nicht mehr anmelden; bestehende Buchungen bleiben erhalten.</p>
+      <p>Die Person kann sich nicht mehr anmelden. Buchungen bleiben erhalten.</p>
     } @else {
-      <p>Das Konto wird wieder freigegeben und die Person kann sich erneut anmelden.</p>
+      <p>Die Person kann sich wieder anmelden.</p>
     }
   }
   <ng-template #footer>

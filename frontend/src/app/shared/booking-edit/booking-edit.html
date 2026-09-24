@@ -28,7 +28,7 @@
       }
       @if (conflict(); as c) {
         <p-message severity="error">
-          Dieser Zeitraum ist bereits belegt: „{{ c.title }}“ von {{ c.start | date: 'HH:mm' }} bis {{ c.end | date: 'HH:mm' }} Uhr ({{ c.userName }}). Bitte eine andere Zeit wählen.
+          Bereits belegt: „{{ c.title }}“, {{ c.start | date: 'HH:mm' }}–{{ c.end | date: 'HH:mm' }} Uhr ({{ c.userName }}).
         </p-message>
       }
 
@@ -58,7 +58,7 @@
         </p-autocomplete>
         <small class="seats" [class.seats--full]="roomFull()" aria-live="polite">
           <i class="pi pi-users" aria-hidden="true"></i>
-          {{ seatsTaken() }} von {{ seatCapacity() }} Plätzen belegt (inklusive Ihnen)
+          {{ seatsTaken() }} von {{ seatCapacity() }} Plätzen belegt, Sie eingerechnet
           @if (d.online) {
             <span class="seats__online">· {{ d.onlineInvitees.length }} online</span>
           }
@@ -78,7 +78,7 @@
               @if (onlineLocked()) {
                 Zum Ausschalten erst die Online-Teilnehmenden entfernen.
               } @else {
-                Weitere Personen können online zugeschaltet werden, ohne einen Platz im Raum zu belegen.
+                Online-Teilnehmende belegen keinen Platz im Raum.
               }
             </small>
           </div>
@@ -118,6 +118,6 @@
 
   <ng-template #footer>
     <p-button label="Abbrechen" severity="secondary" [outlined]="true" (onClick)="close.emit()" />
-    <p-button label="Änderungen speichern" icon="pi pi-check" [disabled]="invalid() || unchanged()" (onClick)="save()" />
+    <p-button label="Speichern" icon="pi pi-check" [disabled]="invalid() || unchanged()" (onClick)="save()" />
   </ng-template>
 </p-dialog>

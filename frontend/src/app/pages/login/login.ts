@@ -17,9 +17,9 @@ const STORAGE_KEY = 'raumbuchung.email';
 const FAKE_REQUEST_MS = 800;
 
 const ERROR_TEXT: Record<Exclude<LoginResult, 'ok'>, string> = {
-  'wrong-credentials': 'E-Mail-Adresse oder Passwort ist falsch. Bitte versuchen Sie es erneut.',
-  'account-locked': 'Dieses Konto ist gesperrt. Bitte wenden Sie sich an die IT-Abteilung.',
-  'too-many-attempts': `Nach ${MAX_ATTEMPTS} Fehlversuchen wurde das Konto gesperrt. Bitte wenden Sie sich an die IT-Abteilung.`,
+  'wrong-credentials': 'E-Mail-Adresse oder Passwort ist falsch.',
+  'account-locked': 'Konto gesperrt. Bitte an die IT-Abteilung wenden.',
+  'too-many-attempts': `Konto nach ${MAX_ATTEMPTS} Fehlversuchen gesperrt. Bitte an die IT-Abteilung wenden.`,
 };
 
 @Component({

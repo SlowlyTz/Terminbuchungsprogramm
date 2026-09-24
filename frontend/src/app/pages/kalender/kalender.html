@@ -63,7 +63,6 @@
       <app-empty-state
         icon="pi pi-filter-slash"
         title="Kein Raum passt zu den Filtern"
-        text="Lockern Sie die Auswahl, zum Beispiel bei der Ausstattung oder der Mindestgröße."
         actionLabel="Filter zurücksetzen"
         actionIcon="pi pi-filter-slash"
         [compact]="true"
@@ -136,7 +135,7 @@
     <app-empty-state
       icon="pi pi-calendar"
       title="Noch kein Raum ausgewählt"
-      text="Wählen Sie oben einen Raum, dann erscheint hier seine Belegung für die ganze Woche."
+      text="Wählen Sie oben einen Raum, um seine Belegung zu sehen."
     />
   }
 
@@ -146,8 +145,8 @@
     [header]="step() === 'form' ? 'Neue Buchung in Raum ' + (draft() ? roomName(draft()!.roomId) : '') : 'Buchung bestätigen'"
     [visible]="dialogOpen()"
     (visibleChange)="!$event && cancelDraft()"
-  [dismissableMask]="true"
     [modal]="true"
+  [dismissableMask]="true"
     [draggable]="false"
     [style]="{ width: '36rem' }"
     [breakpoints]="{ '640px': '95vw' }"
@@ -173,7 +172,7 @@
         }
         @if (conflict(); as c) {
           <p-message severity="error">
-            Dieser Zeitraum ist bereits belegt: „{{ c.title }}“ von {{ c.start | date: 'HH:mm' }} bis {{ c.end | date: 'HH:mm' }} Uhr ({{ c.userName }}). Bitte eine andere Zeit wählen.
+            Bereits belegt: „{{ c.title }}“, {{ c.start | date: 'HH:mm' }}–{{ c.end | date: 'HH:mm' }} Uhr ({{ c.userName }}).
           </p-message>
         }
 
@@ -203,7 +202,7 @@
           </p-autocomplete>
           <small class="seats" [class.seats--full]="roomFull()" aria-live="polite">
             <i class="pi pi-users" aria-hidden="true"></i>
-            {{ seatsTaken() }} von {{ seatCapacity() }} Plätzen belegt (inklusive Ihnen)
+            {{ seatsTaken() }} von {{ seatCapacity() }} Plätzen belegt, Sie eingerechnet
             @if (d.online) {
               <span class="seats__online">· {{ d.onlineInvitees.length }} online</span>
             }
@@ -223,7 +222,7 @@
                 @if (onlineLocked()) {
                   Zum Ausschalten erst die Online-Teilnehmenden entfernen.
                 } @else {
-                  Weitere Personen können online zugeschaltet werden, ohne einen Platz im Raum zu belegen.
+                  Online-Teilnehmende belegen keinen Platz im Raum.
                 }
               </small>
             </div>
@@ -305,8 +304,8 @@
     header="Buchung bestätigt"
     [visible]="confirmed() !== null"
     (visibleChange)="!$event && confirmed.set(null)"
-  [dismissableMask]="true"
     [modal]="true"
+  [dismissableMask]="true"
     [draggable]="false"
     [style]="{ width: '32rem' }"
     [breakpoints]="{ '640px': '95vw' }"
@@ -314,7 +313,7 @@
     @if (confirmed(); as b) {
       <div class="done">
         <span class="done__icon" aria-hidden="true"><i class="pi pi-check"></i></span>
-        <p class="done__title">Ihre Buchung ist eingetragen.</p>
+        <p class="done__title">Eingetragen</p>
       </div>
 
       <dl class="summary">
@@ -332,7 +331,7 @@
 
       <p class="done__note">
         <i class="pi pi-envelope" aria-hidden="true"></i>
-        <span>Eine Bestätigung wurde per E-Mail gesendet. Sie können die Buchung jederzeit unter „Meine Buchungen“ ändern oder stornieren.</span>
+        <span>Bestätigung per E-Mail gesendet.</span>
       </p>
     }
     <ng-template #footer>

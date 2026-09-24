@@ -1,21 +1,20 @@
 <div class="page">
   <header class="page-header">
     <h1>Willkommen, {{ firstName() }}</h1>
-    <p>Was möchten Sie tun?</p>
   </header>
 
   @if (unread() > 0) {
     <a class="notice" routerLink="/benachrichtigungen">
       <i class="pi pi-bell" aria-hidden="true"></i>
-      <span>Sie haben <strong>{{ unread() }}</strong> offene {{ unread() === 1 ? 'Einladung' : 'Einladungen' }} – jetzt zu- oder absagen.</span>
+      <span><strong>{{ unread() }}</strong> offene {{ unread() === 1 ? 'Einladung' : 'Einladungen' }}</span>
       <i class="pi pi-arrow-right" aria-hidden="true"></i>
     </a>
   }
 
   <section class="shortcuts" aria-label="Schnellzugriff">
     <p-card styleClass="shortcut shortcut--primary">
-      <h2>Einen Raum reservieren</h2>
-      <p>Raum auswählen, freie Zeit im Kalender anklicken, bestätigen – fertig.</p>
+      <h2>Raum reservieren</h2>
+      <p>Freie Zeit im Kalender anklicken.</p>
       <p-button label="Termin buchen" icon="pi pi-calendar-plus" size="large" (onClick)="book()" />
     </p-card>
 
@@ -25,19 +24,19 @@
         <p>{{ last.title }} · Raum {{ roomName(last.roomId) }} · {{ last.start | date: 'HH:mm' }}–{{ last.end | date: 'HH:mm' }} Uhr</p>
         <p-button label="Wiederholen" icon="pi pi-replay" severity="secondary" [outlined]="true" (onClick)="repeatLast()" />
       } @else {
-        <p>Sie haben noch keine Buchung angelegt.</p>
+        <p>Noch keine Buchung vorhanden.</p>
       }
     </p-card>
 
     <p-card styleClass="shortcut">
       <h2>Meine Buchungen</h2>
-      <p>Alle eigenen Reservierungen ansehen, ändern oder stornieren.</p>
+      <p>Ansehen, ändern oder stornieren.</p>
       <p-button label="Buchungen anzeigen" icon="pi pi-list" severity="secondary" [outlined]="true" routerLink="/meine-buchungen" />
     </p-card>
   </section>
 
   <section class="upcoming" aria-labelledby="upcoming-heading">
-    <h2 id="upcoming-heading">Ihre nächsten Termine</h2>
+    <h2 id="upcoming-heading">Nächste Termine</h2>
     @if (upcoming().length === 0) {
       <p class="muted">Keine anstehenden Termine.</p>
     } @else {

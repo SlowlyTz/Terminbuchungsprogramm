@@ -3,13 +3,8 @@
     <main class="boot-error__card" role="alert">
       <span class="boot-error__icon" aria-hidden="true"><i class="pi pi-exclamation-triangle"></i></span>
       <h1>Daten konnten nicht geladen werden</h1>
-      <p>
-        Die Verbindung zum Server ist fehlgeschlagen. Bitte prüfen Sie Ihre Netzwerkverbindung
-        und versuchen Sie es erneut.
-      </p>
-      <p class="boot-error__hint">
-        Im Prototyp wird dieser Zustand über den Schalter „Ladefehler simulieren“ in den Einstellungen ausgelöst.
-      </p>
+      <p>Keine Verbindung zum Server. Bitte Netzwerk prüfen und erneut versuchen.</p>
+      <p class="boot-error__hint">Prototyp: ausgelöst über „Ladefehler simulieren“ in den Einstellungen.</p>
       <p-button label="Erneut versuchen" icon="pi pi-refresh" (onClick)="boot.retry()" />
     </main>
   </div>

@@ -1,7 +1,6 @@
 <div class="page">
   <header class="page-header">
     <h1>Benachrichtigungen</h1>
-    <p>Einladungen zu Terminen, die andere für Sie gebucht haben.</p>
   </header>
 
   <section aria-labelledby="open-heading">
@@ -9,8 +8,7 @@
     @if (open().length === 0) {
       <app-empty-state
         icon="pi pi-check-circle"
-        title="Alles beantwortet"
-        text="Sie haben keine offenen Einladungen. Neue Einladungen erscheinen hier, sobald jemand Sie zu einem Termin hinzufügt."
+        title="Keine offenen Einladungen"
         [compact]="true"
       />
     }
@@ -25,7 +23,7 @@
               <span><i class="pi pi-clock" aria-hidden="true"></i> {{ i.start | date: 'HH:mm' }}–{{ i.end | date: 'HH:mm' }} Uhr</span>
               <span><i class="pi pi-building" aria-hidden="true"></i> Raum {{ roomName(i.roomId) }}</span>
             </p>
-            <p class="card__time">Eingegangen {{ i.createdAt | date: 'dd.MM.y, HH:mm' }} Uhr</p>
+            <p class="card__time">Eingegangen {{ i.createdAt | date: 'dd.MM.y' }}</p>
           </div>
           <div class="card__actions">
             <p-button label="Annehmen" icon="pi pi-check" (onClick)="accept(i)" />

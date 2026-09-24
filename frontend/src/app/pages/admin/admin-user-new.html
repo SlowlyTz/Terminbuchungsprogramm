@@ -7,9 +7,8 @@
   <div id="benutzer-angelegt" tabindex="-1">
     <p-message severity="success" icon="pi pi-check-circle">
       <div class="confirmed">
-        <strong>Das Benutzerkonto wurde angelegt.</strong>
-        <span>{{ u.firstName }} {{ u.lastName }}, {{ u.email }}, Abteilung {{ u.department }}, Rolle {{ roleLabels[u.role] }}.</span>
-        <span>Eine E-Mail mit dem Erstpasswort wurde an {{ u.email }} gesendet.</span>
+        <strong>{{ u.firstName }} {{ u.lastName }} wurde angelegt.</strong>
+        <span>Erstpasswort per E-Mail an {{ u.email }} gesendet.</span>
       </div>
     </p-message>
     <div class="after">
@@ -19,7 +18,7 @@
   </div>
 } @else {
   <h2>Neuen Benutzer anlegen</h2>
-  <p class="muted">Pflichtfelder sind mit * markiert. Das Erstpasswort wird automatisch erzeugt und per E-Mail verschickt.</p>
+  <p class="muted">Das Erstpasswort wird per E-Mail verschickt.</p>
 
   <form class="form" (ngSubmit)="!invalid() && reviewOpen.set(true)">
     <div class="row">
@@ -49,14 +48,14 @@
         <p-radiobutton name="role" value="nutzer" inputId="rolle-nutzer" [ngModel]="draft().role" (ngModelChange)="patch({ role: $event })" />
         <span class="role__text">
           <span class="role__title"><i class="pi pi-user" aria-hidden="true"></i> Nutzer</span>
-          <span class="role__desc">Kann Räume buchen sowie eigene Buchungen ändern und stornieren.</span>
+          <span class="role__desc">Räume buchen, eigene Buchungen ändern und stornieren.</span>
         </span>
       </label>
       <label class="role" for="rolle-admin" [class.is-selected]="draft().role === 'admin'">
         <p-radiobutton name="role" value="admin" inputId="rolle-admin" [ngModel]="draft().role" (ngModelChange)="patch({ role: $event })" />
         <span class="role__text">
           <span class="role__title"><i class="pi pi-shield" aria-hidden="true"></i> Admin</span>
-          <span class="role__desc">Zusätzlich: Räume und Benutzer verwalten, fremde Buchungen stornieren, Audit-Log einsehen.</span>
+          <span class="role__desc">Zusätzlich Räume, Benutzer und Audit-Log verwalten.</span>
         </span>
       </label>
     </fieldset>

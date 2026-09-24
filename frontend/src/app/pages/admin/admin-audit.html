@@ -1,7 +1,7 @@
 <div class="toolbar">
   <div>
     <h2>Audit-Log</h2>
-    <p class="muted">Wer hat wann was gemacht. {{ entries().length }} von {{ total() }} Einträgen.</p>
+    <p class="muted">{{ entries().length }} von {{ total() }} Einträgen</p>
   </div>
   <p-button label="Exportieren (CSV)" icon="pi pi-download" severity="secondary" [outlined]="true" [disabled]="true" />
 </div>
