@@ -10,7 +10,9 @@
   color: var(--p-text-muted-color);
 }
 
-// The date doubles as the link into the details, so the whole row feels clickable.
+.row { cursor: pointer; }
+
+// Keyboard users open the details through the date, which is a real button.
 .row__open {
   padding: 0;
   border: 0;

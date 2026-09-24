@@ -1,7 +1,6 @@
 <div class="page">
   <header class="page-header">
     <h1>Meine Buchungen</h1>
-    <p>Alle Reservierungen, die auf Ihren Namen laufen. Zeile anklicken, um Details zu sehen.</p>
   </header>
 
   <p-table [value]="bookings()" [rowHover]="true" responsiveLayout="stack" breakpoint="768px">
@@ -16,7 +15,7 @@
       </tr>
     </ng-template>
     <ng-template #body let-b>
-      <tr class="row" [class.is-past]="isPast(b)">
+      <tr class="row" [class.is-past]="isPast(b)" (click)="detail.set(b)">
         <td>
           <button type="button" class="row__open" (click)="detail.set(b)" [attr.aria-label]="'Details zu ' + b.title + ' anzeigen'">
             {{ b.start | date: 'EEEE, d. MMMM y' }}
@@ -42,8 +41,8 @@
             </span>
           }
         </td>
-        <td class="actions">
-          <p-button label="Details" icon="pi pi-eye" severity="secondary" [outlined]="true" size="small" (onClick)="detail.set(b)" />
+        <!-- Buttons must not also open the details behind them. -->
+        <td class="actions" (click)="$event.stopPropagation()">
           @if (!isPast(b)) {
             <p-button label="Bearbeiten" icon="pi pi-pencil" severity="secondary" [outlined]="true" size="small" (onClick)="editing.set(b)" />
             <p-button label="Stornieren" icon="pi pi-trash" severity="danger" [outlined]="true" size="small" (onClick)="toCancel.set(b)" />
@@ -84,9 +83,8 @@
         Raum {{ roomName(b.roomId) }}, {{ b.start | date: 'EEE d.MM.' }}, {{ b.start | date: 'HH:mm' }}–{{ b.end | date: 'HH:mm' }} Uhr
       </p>
       @if (invitedCount(b) > 0) {
-        <p>{{ invitedCount(b) }} eingeladene {{ invitedCount(b) === 1 ? 'Person wird' : 'Personen werden' }} über die Absage informiert.</p>
+        <p>{{ invitedCount(b) }} eingeladene {{ invitedCount(b) === 1 ? 'Person wird' : 'Personen werden' }} informiert.</p>
       }
-      <p>Die Reservierung wird gelöscht und der Raum wieder freigegeben.</p>
     }
     <ng-template #footer>
       <p-button label="Zurück" severity="secondary" [outlined]="true" (onClick)="toCancel.set(null)" />
