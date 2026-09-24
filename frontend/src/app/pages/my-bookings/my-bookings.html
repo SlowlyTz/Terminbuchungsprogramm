@@ -77,7 +77,7 @@
 
   <app-booking-edit [booking]="editing()" (close)="editing.set(null)" (saved)="onSaved($event)" />
 
-  <p-dialog header="Buchung stornieren?" [visible]="toCancel() !== null" (visibleChange)="!$event && toCancel.set(null)" [modal]="true" [draggable]="false" [style]="{ width: '30rem' }" [breakpoints]="{ '600px': '95vw' }">
+  <p-dialog header="Buchung stornieren?" [visible]="toCancel() !== null" (visibleChange)="!$event && toCancel.set(null)" [modal]="true" [dismissableMask]="true" [draggable]="false" [style]="{ width: '30rem' }" [breakpoints]="{ '600px': '95vw' }">
     @if (toCancel(); as b) {
       <p>
         <strong>{{ b.title }}</strong><br>
