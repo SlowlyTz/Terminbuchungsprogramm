@@ -42,34 +42,39 @@
     } @else {
       <ul class="upcoming__list">
         @for (b of upcoming(); track b.id) {
-          <li class="upcoming__item">
+          <li>
+            <!-- Own bookings open their details, accepted invitations lead to the notifications. -->
             @if (b.booking; as booked) {
-              <button type="button" class="upcoming__button" (click)="detail.set(booked)" [attr.aria-label]="'Details zu ' + b.title + ' anzeigen'">
-                <span class="upcoming__date">
-                  <strong>{{ b.start | date: 'EEE, d. MMM' }}</strong>
-                  <span>{{ b.start | date: 'HH:mm' }}–{{ b.end | date: 'HH:mm' }} Uhr</span>
-                </span>
-                <span class="upcoming__text">
-                  <strong>{{ b.title }}</strong>
-                  <span class="muted">Raum {{ roomName(b.roomId) }}</span>
-                </span>
-                <i class="pi pi-angle-right" aria-hidden="true"></i>
+              <button type="button" class="upcoming__row" (click)="detail.set(booked)">
+                <ng-container *ngTemplateOutlet="row; context: { $implicit: b }" />
               </button>
             } @else {
-              <span class="upcoming__date">
-                <strong>{{ b.start | date: 'EEE, d. MMM' }}</strong>
-                <span>{{ b.start | date: 'HH:mm' }}–{{ b.end | date: 'HH:mm' }} Uhr</span>
-              </span>
-              <span class="upcoming__text">
-                <strong>{{ b.title }}</strong>
-                <span class="muted">Raum {{ roomName(b.roomId) }}@if (b.host) { · eingeladen von {{ b.host }}}</span>
-              </span>
+              <a class="upcoming__row" routerLink="/benachrichtigungen">
+                <ng-container *ngTemplateOutlet="row; context: { $implicit: b }" />
+              </a>
             }
           </li>
         }
       </ul>
     }
   </section>
+
+  <ng-template #row let-b>
+    <span class="upcoming__date">
+      <strong>{{ b.start | date: 'EEE, d. MMM' }}</strong>
+      <span>{{ b.start | date: 'HH:mm' }}–{{ b.end | date: 'HH:mm' }} Uhr</span>
+    </span>
+    <span class="upcoming__text">
+      <strong>{{ b.title }}</strong>
+      <span class="muted">Raum {{ roomName(b.roomId) }}@if (b.host) { · eingeladen von {{ b.host }}}</span>
+    </span>
+    <span class="upcoming__badge">
+      @if (status(b); as st) {
+        <p-tag [value]="st.label" [severity]="st.severity" />
+      }
+    </span>
+    <i class="pi pi-angle-right upcoming__chevron" aria-hidden="true"></i>
+  </ng-template>
 
   <app-booking-detail [booking]="detail()" [showActions]="false" (close)="detail.set(null)" />
 </div>
