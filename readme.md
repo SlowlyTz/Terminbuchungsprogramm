@@ -9,9 +9,16 @@ Stack: Angular 21 + Optimus UI · Express 5 (Node 22) · MariaDB 10.11
 ```
 backend/    Express-API, liefert den Angular-Build aus (Port 3000)
 frontend/   Angular-App
-db/         Schema, Seeds, ERD
-docs/       Personas, Stack-Entscheidung, Aufgabenplan
+db/         Schema und Seeds
+docs/       Personas, Stack-Entscheidung, Aufgabenplan, ERD (docs/db/)
 ```
+
+## Dokumentation
+
+- [Aufgabenplan](docs/plan.md)
+- [Personas](<docs/Personas - LF10 Benutzerschnittstellen.pdf>)
+- [Stack-Entscheidung](<docs/Stack-Entscheidung Raumbuchung - Vorbereitung Kundengespraech (1).pdf>)
+- ERD: [Entity-Relationship-Modell](docs/db/entity-relationship-model.html) · [Erweitertes ERD](docs/db/erweitertes-erd.html) · [Erweitertes ERD (Chen, PNG)](docs/db/erweitertes-erd-chen.png)
 
 ## Voraussetzungen
 
