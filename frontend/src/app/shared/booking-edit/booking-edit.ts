@@ -1,8 +1,9 @@
 import { DatePipe } from '@angular/common';
-import { Component, computed, effect, inject, input, output, signal } from '@angular/core';
+import { Component, computed, effect, inject, input, linkedSignal, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { AutoCompleteCompleteEvent, AutoCompleteModule } from '@openng/optimus-ui/autocomplete';
 import { ButtonModule } from '@openng/optimus-ui/button';
+import { DatePickerModule } from '@openng/optimus-ui/datepicker';
 import { DialogModule } from '@openng/optimus-ui/dialog';
 import { InputTextModule } from '@openng/optimus-ui/inputtext';
 import { MessageModule } from '@openng/optimus-ui/message';
@@ -28,7 +29,7 @@ interface EditDraft {
 /** Edit dialog for an existing booking: time, title and invitees. */
 @Component({
   selector: 'app-booking-edit',
-  imports: [DatePipe, FormsModule, AutoCompleteModule, ButtonModule, DialogModule, InputTextModule, MessageModule, ToggleSwitchModule, Collapsible],
+  imports: [DatePipe, FormsModule, AutoCompleteModule, ButtonModule, DatePickerModule, DialogModule, InputTextModule, MessageModule, ToggleSwitchModule, Collapsible],
   templateUrl: './booking-edit.html',
   styleUrl: './booking-edit.scss',
 })
@@ -46,6 +47,16 @@ export class BookingEdit {
   readonly draft = signal<EditDraft | null>(null);
   readonly suggestions = signal<Invitee[]>([]);
   readonly conflict = signal<Booking | null>(null);
+
+  // Pickers hold Date, the draft "HH:mm"; the picker keeps its own Date while the time is unchanged.
+  readonly startPick = linkedSignal<string | undefined, Date | null>({
+    source: () => this.draft()?.startTime,
+    computation: (time, prev) => pickFor(time, prev?.value),
+  });
+  readonly endPick = linkedSignal<string | undefined, Date | null>({
+    source: () => this.draft()?.endTime,
+    computation: (time, prev) => pickFor(time, prev?.value),
+  });
 
   readonly open = computed(() => this.booking() !== null);
   readonly roomName = computed(() => {
@@ -69,12 +80,12 @@ export class BookingEdit {
   readonly start = computed(() => {
     const b = this.booking();
     const d = this.draft();
-    return b && d ? combine(b.start, d.startTime) : null;
+    return b && d?.startTime ? combine(b.start, d.startTime) : null;
   });
   readonly end = computed(() => {
     const b = this.booking();
     const d = this.draft();
-    return b && d ? combine(b.start, d.endTime) : null;
+    return b && d?.endTime ? combine(b.start, d.endTime) : null;
   });
 
   readonly invalid = computed(() => {
@@ -113,6 +124,16 @@ export class BookingEdit {
   patch(patch: Partial<EditDraft>): void {
     this.draft.update((d) => (d ? { ...d, ...patch } : d));
     this.conflict.set(null);
+  }
+
+  setStart(value: Date | null): void {
+    this.startPick.set(value);
+    this.patch({ startTime: value ? toTime(value) : '' });
+  }
+
+  setEnd(value: Date | null): void {
+    this.endPick.set(value);
+    this.patch({ endTime: value ? toTime(value) : '' });
   }
 
   /** Accepts the people for the room up to its seats; anything beyond is dropped with a warning. */
@@ -187,6 +208,13 @@ export class BookingEdit {
 
 function toTime(d: Date): string {
   return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+}
+
+/** Keeps the previous picker value while it still shows the same time. */
+function pickFor(time: string | undefined, prev: Date | null | undefined): Date | null {
+  if (!time) return null;
+  if (prev && toTime(prev) === time) return prev;
+  return combine(new Date(), time);
 }
 
 function sameIds(a: Invitee[], b: Invitee[]): boolean {

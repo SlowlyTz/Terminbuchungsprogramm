@@ -14,11 +14,11 @@
 
 :host ::ng-deep p-message { display: block; margin-bottom: 1rem; }
 
-.edit__more {
-  margin-top: 0.5rem;
+.edit__more { margin-top: 0.5rem; }
 
-  input { width: 100%; }
-}
+:host ::ng-deep .time-input { width: 100%; }
+
+.optional { font-weight: 400; font-size: 0.875rem; color: var(--p-text-muted-color); }
 
 .seats {
   display: flex;

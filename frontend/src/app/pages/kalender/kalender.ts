@@ -1,9 +1,19 @@
 import { DatePipe } from '@angular/common';
-import { Component, DestroyRef, computed, effect, inject, input, signal } from '@angular/core';
+import {
+  Component,
+  DestroyRef,
+  computed,
+  effect,
+  inject,
+  input,
+  linkedSignal,
+  signal,
+  untracked,
+} from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
 import { AutoCompleteCompleteEvent, AutoCompleteModule } from '@openng/optimus-ui/autocomplete';
 import { ButtonModule } from '@openng/optimus-ui/button';
+import { DatePickerModule } from '@openng/optimus-ui/datepicker';
 import { DialogModule } from '@openng/optimus-ui/dialog';
 import { InputTextModule } from '@openng/optimus-ui/inputtext';
 import { MessageModule } from '@openng/optimus-ui/message';
@@ -24,6 +34,11 @@ import { EmptyState } from '../../shared/empty-state/empty-state';
 import { WeekCalendar } from '../../shared/week-calendar/week-calendar';
 
 const MOBILE_QUERY = '(max-width: 767px)';
+const STORAGE_KEY = 'raumbuchung.kalender';
+const HIGHLIGHT_MS = 2000;
+/** Bookable hours, same range as the calendar grid. */
+const DAY_START = 7;
+const DAY_END = 19;
 
 /** Thresholds for the capacity filter; friendlier than a free number field. */
 const CAPACITY_OPTIONS = [
@@ -42,6 +57,7 @@ const CAPACITY_OPTIONS = [
     FormsModule,
     AutoCompleteModule,
     ButtonModule,
+    DatePickerModule,
     DialogModule,
     InputTextModule,
     MessageModule,
@@ -56,14 +72,16 @@ const CAPACITY_OPTIONS = [
   ],
   templateUrl: './kalender.html',
   styleUrl: './kalender.scss',
+  host: { '(document:keydown)': 'onShortcut($event)' },
 })
 export class Kalender {
   private readonly auth = inject(AuthService);
   private readonly data = inject(DataService);
   private readonly admin = inject(AdminDataService);
   private readonly notify = inject(Notify);
-  private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
+  /** Room and filters from the last visit; `?raum=` still wins. */
+  private readonly stored = storedSelection();
 
   // Query params bound by the router: ?raum=<id>&vorlage=<bookingId>
   readonly raum = input<string>();
@@ -78,9 +96,9 @@ export class Kalender {
   readonly isMobile = signal(false);
 
   // --- Filters -------------------------------------------------------------
-  readonly equipmentFilter = signal<string[]>([]);
-  readonly floorFilter = signal<string[]>([]);
-  readonly minCapacity = signal(0);
+  readonly equipmentFilter = signal<string[]>(this.stored.equipment);
+  readonly floorFilter = signal<string[]>(this.stored.floors);
+  readonly minCapacity = signal(this.stored.minCapacity);
 
   readonly equipmentOptions = computed(() => [...new Set(this.data.rooms().flatMap((r) => r.equipment))].sort());
   readonly floorOptions = computed(() => [...new Set(this.data.rooms().map((r) => r.floor))].sort());
@@ -101,12 +119,23 @@ export class Kalender {
 
   // --- Booking dialog ------------------------------------------------------
   readonly draft = signal<BookingDraft | null>(null);
-  /** Dialog step: form first, then the summary to confirm. */
-  readonly step = signal<'form' | 'review'>('form');
   readonly dialogOpen = computed(() => this.draft() !== null);
   readonly suggestions = signal<Invitee[]>([]);
   readonly conflict = signal<Booking | null>(null);
-  readonly confirmed = signal<Booking | null>(null);
+  /** Freshly created booking, briefly highlighted in the calendar. */
+  readonly highlightId = signal<number | null>(null);
+  private highlightTimer?: ReturnType<typeof setTimeout>;
+
+  // The time pickers work with Date, the draft with "HH:mm". Keeping the picker's own Date while
+  // the time is unchanged stops ngModel from rewriting the field while someone is typing.
+  readonly startPick = linkedSignal<string | undefined, Date | null>({
+    source: () => this.draft()?.startTime,
+    computation: (time, prev) => pickFor(time, prev?.value),
+  });
+  readonly endPick = linkedSignal<string | undefined, Date | null>({
+    source: () => this.draft()?.endTime,
+    computation: (time, prev) => pickFor(time, prev?.value),
+  });
 
   /** Booking shown in the read-only detail dialog. */
   readonly detail = signal<Booking | null>(null);
@@ -119,15 +148,14 @@ export class Kalender {
     return r ? this.data.bookings().filter((b) => b.roomId === r.id) : [];
   });
   readonly roomName = (id: number) => this.data.roomById().get(id)?.name ?? '';
-  readonly names = (list: Invitee[]) => list.map((i) => i.name).join(', ');
 
   readonly draftStart = computed(() => {
     const d = this.draft();
-    return d ? combine(d.date, d.startTime) : null;
+    return d?.startTime ? combine(d.date, d.startTime) : null;
   });
   readonly draftEnd = computed(() => {
     const d = this.draft();
-    return d ? combine(d.date, d.endTime) : null;
+    return d?.endTime ? combine(d.date, d.endTime) : null;
   });
   readonly draftInvalid = computed(() => {
     const s = this.draftStart();
@@ -158,16 +186,27 @@ export class Kalender {
     mq.addEventListener('change', listener);
     this.destroyRef.onDestroy(() => mq.removeEventListener('change', listener));
 
+    this.destroyRef.onDestroy(() => clearTimeout(this.highlightTimer));
+
+    this.room.set(this.data.rooms().find((r) => r.id === this.stored.roomId) ?? null);
+
+    // Only the query params trigger this; new bookings must not reopen the template.
     effect(() => {
       const id = Number(this.raum());
-      const preset = this.data.rooms().find((r) => r.id === id) ?? null;
-      if (preset) this.room.set(preset);
+      const templateId = Number(this.vorlage());
+      untracked(() => {
+        const preset = this.data.rooms().find((r) => r.id === id) ?? null;
+        if (!preset) return;
+        if (!this.rooms().some((r) => r.id === preset.id)) this.clearFilters();
+        this.room.set(preset);
 
-      const template = this.data.bookings().find((b) => b.id === Number(this.vorlage()));
-      if (preset && template) {
-        this.draft.set({
+        const template = this.data.bookings().find((b) => b.id === templateId);
+        if (!template) return;
+        const date = nextWeekday(new Date());
+        this.showDay(date);
+        this.openDraft({
           roomId: preset.id,
-          date: nextWeekday(new Date()),
+          date,
           startTime: toTime(template.start),
           endTime: toTime(template.end),
           title: template.title,
@@ -175,25 +214,39 @@ export class Kalender {
           online: template.online,
           onlineInvitees: [...template.onlineInvitees],
         });
-        this.moreOpen.set(template.online);
-        this.step.set('form');
+      });
+    });
+
+    // Keep the selection honest: there is always a room while any passes the filters.
+    effect(() => {
+      const list = this.rooms();
+      const current = this.room();
+      if (current ? list.some((r) => r.id === current.id) : list.length === 0) return;
+      const next = list[0] ?? null;
+      this.room.set(next);
+      if (current) {
+        this.notify.info(
+          next
+            ? `Raum ${current.name} passt nicht zu den Filtern, jetzt Raum ${next.name}.`
+            : `Raum ${current.name} passt nicht zu den Filtern.`,
+          next ? 'Raum gewechselt' : 'Raum abgewählt',
+        );
       }
     });
 
-    // Keep the selection honest: a room that no longer passes the filters is cleared.
-    effect(() => {
-      const current = this.room();
-      if (current && !this.rooms().some((r) => r.id === current.id)) {
-        this.room.set(null);
-        this.notify.info(`Raum ${current.name} passt nicht zu den Filtern.`, 'Raum abgewählt');
-      }
-    });
+    effect(() =>
+      rememberSelection({
+        roomId: this.room()?.id ?? null,
+        equipment: this.equipmentFilter(),
+        floors: this.floorFilter(),
+        minCapacity: this.minCapacity(),
+      }),
+    );
   }
 
   onRoomChange(room: Room | null): void {
     this.room.set(room);
     this.draft.set(null);
-    this.confirmed.set(null);
     this.conflict.set(null);
   }
 
@@ -218,15 +271,78 @@ export class Kalender {
     else { this.nextWeek(); this.dayIndex.set(0); }
   }
 
-  startDraft(slotStart: Date): void {
+  /** Shows the week (or, on mobile, the day) containing `d`. */
+  private showDay(d: Date): void {
+    this.weekStart.set(startOfWeek(d));
+    this.dayIndex.set(weekdayIndex(d));
+  }
+
+  startDraft(range: { start: Date; end: Date }): void {
     const r = this.room();
     if (!r) return;
-    const end = new Date(slotStart.getTime() + 60 * 60_000);
-    this.confirmed.set(null);
+    this.openDraft({
+      roomId: r.id,
+      date: range.start,
+      startTime: toTime(range.start),
+      endTime: toTime(range.end),
+      title: '',
+      invitees: [],
+      online: false,
+      onlineInvitees: [],
+    });
+  }
+
+  private openDraft(draft: BookingDraft): void {
     this.conflict.set(null);
-    this.step.set('form');
-    this.moreOpen.set(false);
-    this.draft.set({ roomId: r.id, date: slotStart, startTime: toTime(slotStart), endTime: toTime(end), title: '', invitees: [], online: false, onlineInvitees: [] });
+    this.moreOpen.set(draft.online);
+    this.draft.set(draft);
+  }
+
+  /** Keyboard shortcut N: the next free hour from now in the shown week. */
+  newAtNextFreeSlot(): void {
+    const r = this.room();
+    if (!r) return;
+    const slot = nextFreeSlot(this.weekStart(), (s, e) => !!this.data.findConflict(r.id, s, e));
+    if (!slot) {
+      this.notify.info(`Raum ${r.name} hat diese Woche keine freie Stunde mehr.`, 'Kein freier Termin');
+      return;
+    }
+    this.showDay(slot.start);
+    this.startDraft(slot);
+  }
+
+  onShortcut(e: KeyboardEvent): void {
+    if (e.defaultPrevented || e.ctrlKey || e.metaKey || e.altKey || e.shiftKey) return;
+    if (isEditable(e.target) || document.querySelector('.p-dialog') || !this.room()) return;
+    switch (e.key.toLowerCase()) {
+      case 'arrowleft':
+        if (this.isMobile()) this.previousDay();
+        else this.previousWeek();
+        break;
+      case 'arrowright':
+        if (this.isMobile()) this.nextDay();
+        else this.nextWeek();
+        break;
+      case 't':
+        this.today();
+        break;
+      case 'n':
+        this.newAtNextFreeSlot();
+        break;
+      default:
+        return;
+    }
+    e.preventDefault();
+  }
+
+  setStart(value: Date | null): void {
+    this.startPick.set(value);
+    this.patchDraft({ startTime: value ? toTime(value) : '' });
+  }
+
+  setEnd(value: Date | null): void {
+    this.endPick.set(value);
+    this.patchDraft({ endTime: value ? toTime(value) : '' });
   }
 
   searchInvitees(event: AutoCompleteCompleteEvent): void {
@@ -275,7 +391,7 @@ export class Kalender {
     this.patchDraft({ online });
   }
 
-  review(): void {
+  book(): void {
     const d = this.draft();
     const s = this.draftStart();
     const e = this.draftEnd();
@@ -285,22 +401,30 @@ export class Kalender {
       this.conflict.set(conflict);
       return;
     }
-    this.step.set('review');
-  }
 
-  confirm(): void {
-    const d = this.draft();
-    if (!d) return;
     const booking = this.data.create(d, this.user().id, this.user().name);
-    this.admin.log(this.user().name, 'booking_created', auditDetails(this.roomName(booking.roomId), booking));
+    const room = this.roomName(booking.roomId);
+    this.admin.log(this.user().name, 'booking_created', auditDetails(room, booking));
     this.draft.set(null);
-    // The confirmation popup replaces the toast; both at once would say the same thing twice.
-    this.confirmed.set(booking);
+    this.highlight(booking.id);
+    this.notify.successWithUndo(
+      `„${booking.title}“, Raum ${room}, ${shortDate(booking.start)}, ${toTime(booking.start)}–${toTime(booking.end)} Uhr · Bestätigung per E-Mail gesendet`,
+      'Gebucht',
+      () => this.undoBooking(booking),
+    );
   }
 
-  goToMyBookings(): void {
-    this.confirmed.set(null);
-    this.router.navigate(['/meine-buchungen']);
+  private undoBooking(b: Booking): void {
+    if (!this.data.bookings().some((o) => o.id === b.id)) return;
+    this.data.cancel(b.id);
+    this.admin.log(this.user().name, 'booking_cancelled', auditDetails(this.roomName(b.roomId), b));
+    this.notify.info(`„${b.title}“, Raum ${this.roomName(b.roomId)}.`, 'Buchung zurückgenommen');
+  }
+
+  private highlight(id: number): void {
+    clearTimeout(this.highlightTimer);
+    this.highlightId.set(id);
+    this.highlightTimer = setTimeout(() => this.highlightId.set(null), HIGHLIGHT_MS);
   }
 
   cancelDraft(): void {
@@ -309,9 +433,85 @@ export class Kalender {
   }
 }
 
+interface StoredSelection {
+  roomId: number | null;
+  equipment: string[];
+  floors: string[];
+  minCapacity: number;
+}
+
+function storedSelection(): StoredSelection {
+  const fallback: StoredSelection = { roomId: null, equipment: [], floors: [], minCapacity: 0 };
+  try {
+    const raw = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? 'null');
+    if (!raw || typeof raw !== 'object') return fallback;
+    const strings = (v: unknown) => (Array.isArray(v) ? v.filter((x) => typeof x === 'string') : []);
+    return {
+      roomId: typeof raw.roomId === 'number' ? raw.roomId : null,
+      equipment: strings(raw.equipment),
+      floors: strings(raw.floors),
+      minCapacity: typeof raw.minCapacity === 'number' ? raw.minCapacity : 0,
+    };
+  } catch {
+    return fallback;
+  }
+}
+
+function rememberSelection(selection: StoredSelection): void {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(selection));
+  } catch {
+    // Storage may be unavailable (private mode); the page then starts with the first room.
+  }
+}
+
+/** Focus is in something that takes typing, so single-key shortcuts must stay out of the way. */
+function isEditable(target: EventTarget | null): boolean {
+  return (
+    target instanceof HTMLElement &&
+    (target.isContentEditable ||
+      !!target.closest('input, textarea, select, [role="combobox"], [role="listbox"]'))
+  );
+}
+
+/**
+ * First free hour on a half-hour boundary, from now (or the start of the shown week, if later)
+ * up to the end of that week. A week in the past falls back to the current one.
+ */
+function nextFreeSlot(
+  shownWeek: Date,
+  taken: (start: Date, end: Date) => boolean,
+): { start: Date; end: Date } | null {
+  const now = new Date();
+  const week = addDays(shownWeek, 5) <= now ? startOfWeek(now) : shownWeek;
+  for (let i = 0; i < 5; i++) {
+    const day = addDays(week, i);
+    for (let m = DAY_START * 60; m + 60 <= DAY_END * 60; m += 30) {
+      const start = new Date(day);
+      start.setHours(0, m, 0, 0);
+      const end = new Date(start.getTime() + 60 * 60_000);
+      if (start >= now && !taken(start, end)) return { start, end };
+    }
+  }
+  return null;
+}
+
+/** Keeps the previous picker value while it still shows the same time. */
+function pickFor(time: string | undefined, prev: Date | null | undefined): Date | null {
+  if (!time) return null;
+  if (prev && toTime(prev) === time) return prev;
+  return combine(new Date(), time);
+}
+
 function auditDetails(roomName: string, b: Booking): string {
   const day = b.start.toLocaleDateString('de-DE', { weekday: 'short', day: '2-digit', month: '2-digit' });
   return `Raum ${roomName}, ${day} ${toTime(b.start)}–${toTime(b.end)} Uhr`;
+}
+
+/** "Do 12.11." */
+function shortDate(d: Date): string {
+  const day = d.toLocaleDateString('de-DE', { weekday: 'short' }).replace('.', '');
+  return `${day} ${d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' })}`;
 }
 
 function startOfWeek(d: Date): Date {

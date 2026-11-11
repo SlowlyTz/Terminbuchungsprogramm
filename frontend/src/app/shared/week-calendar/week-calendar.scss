@@ -90,13 +90,14 @@
   background: transparent;
   cursor: pointer;
 
-  &:hover:not(:disabled) { background: var(--p-highlight-background); }
   &:focus-visible { outline-offset: -3px; z-index: 2; }
   &.is-booked { cursor: not-allowed; }
 
   // Past times cannot be booked; the hatching says so without extra text.
+  // The opaque base hides today's tint, so past hours look the same in every column.
   &.is-past {
     cursor: not-allowed;
+    background-color: var(--p-content-background);
     background-image: repeating-linear-gradient(
       135deg,
       transparent,
@@ -104,6 +105,68 @@
       var(--app-surface-muted) 5px,
       var(--app-surface-muted) 10px
     );
+  }
+
+  // Each odd slot starts a full hour; redraw the hour line the opaque base covers.
+  &.is-past:nth-child(odd) {
+    background-image:
+      linear-gradient(var(--p-content-border-color) 1px, transparent 1px),
+      repeating-linear-gradient(
+        135deg,
+        transparent,
+        transparent 5px,
+        var(--app-surface-muted) 5px,
+        var(--app-surface-muted) 10px
+      );
+  }
+}
+
+.cal__grid.is-dragging {
+  user-select: none;
+  cursor: ns-resize;
+
+  .cal__slot { cursor: inherit; }
+}
+
+// Preview of what a click or drag would book; purely visual, the slots underneath stay the target.
+.cal__ghost {
+  position: absolute;
+  left: 3px;
+  right: 3px;
+  padding: 0.25rem 0.375rem;
+  overflow: hidden;
+  border: 1px dashed var(--p-primary-color);
+  border-radius: 0.375rem;
+  background: color-mix(in srgb, var(--p-primary-color) 12%, transparent);
+  color: var(--p-primary-color);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  line-height: 1.25;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.cal__now {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  margin-top: -1px;
+  background: var(--p-red-500, #ef4444);
+  pointer-events: none;
+  z-index: 2;
+
+  &::before {
+    content: '';
+    position: absolute;
+    left: -4px;
+    top: -3px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: inherit;
   }
 }
 
@@ -135,6 +198,19 @@
     background: var(--app-own-bg);
     border-left-color: var(--p-primary-color);
   }
+
+  // A booking that was just made glows once so the eye finds it.
+  &.is-highlighted { animation: booking-glow 1.2s ease-out; }
+}
+
+@keyframes booking-glow {
+  0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--p-primary-color) 60%, transparent); }
+  40% { box-shadow: 0 0 0 6px color-mix(in srgb, var(--p-primary-color) 25%, transparent); }
+  100% { box-shadow: 0 0 0 10px transparent; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cal__booking.is-highlighted { animation: none; }
 }
 
 .cal__booking-time { font-weight: 600; }

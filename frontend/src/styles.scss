@@ -92,6 +92,38 @@ p-toggleswitch { flex-shrink: 0; }
   label { font-weight: 600; }
 }
 
+// Booking dialogs sit at a fixed top position, so they grow downwards instead of re-centering.
+.p-dialog-top .p-dialog.booking-dialog {
+  margin-top: 8vh;
+  max-height: calc(92vh - 1rem);
+}
+
+@media (max-width: 640px) {
+  .p-dialog-top .p-dialog.booking-dialog {
+    margin-top: 1rem;
+    max-height: calc(100vh - 2rem);
+  }
+}
+
+// "Rückgängig" in a toast (template in app.ts); takes the toast's own text color.
+.toast-undo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  margin-top: 0.5rem;
+  padding: 0.25rem 0.625rem;
+  border: 1px solid currentColor;
+  border-radius: 0.375rem;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover { background: color-mix(in srgb, currentColor 10%, transparent); }
+}
+
 // Profile drop-up: appended to body, so it is styled globally.
 .sidebar__profile-menu {
   min-width: 16rem;

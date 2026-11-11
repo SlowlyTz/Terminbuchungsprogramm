@@ -10,6 +10,17 @@ export class Notify {
     this.messages.add({ severity: 'success', summary, detail, life: 4000 });
   }
 
+  /** Success toast with a "Rückgängig" button (rendered in app.ts); `undo` runs at most once. */
+  successWithUndo(detail: string, summary: string, undo: () => void): void {
+    let done = false;
+    const once = () => {
+      if (done) return;
+      done = true;
+      undo();
+    };
+    this.messages.add({ severity: 'success', summary, detail, life: 6000, data: { undo: once } });
+  }
+
   info(detail: string, summary = 'Hinweis'): void {
     this.messages.add({ severity: 'info', summary, detail, life: 4000 });
   }
