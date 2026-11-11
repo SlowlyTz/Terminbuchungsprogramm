@@ -1,7 +1,7 @@
 import { Injectable, signal } from '@angular/core';
 
 /** How long the prototype pretends to load its initial data. */
-export const BOOT_MS = 1000;
+export const BOOT_MS = 350;
 
 /**
  * Mock only: stands in for the first data request after signing in, so the

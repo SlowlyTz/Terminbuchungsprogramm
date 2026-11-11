@@ -14,7 +14,7 @@ const EMAIL_PATTERN = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 const STORAGE_KEY = 'raumbuchung.email';
 
 /** Mock only: a short pause so the pending state on the button is visible. */
-const FAKE_REQUEST_MS = 800;
+const FAKE_REQUEST_MS = 400;
 
 const ERROR_TEXT: Record<Exclude<LoginResult, 'ok'>, string> = {
   'wrong-credentials': 'E-Mail-Adresse oder Passwort ist falsch.',
@@ -90,11 +90,12 @@ export class Login {
     }, FAKE_REQUEST_MS);
   }
 
+  /** Demo shortcut: fills in the account and signs in right away. */
   useDemoAccount(email: string): void {
+    if (this.busy()) return;
     this.email.set(email);
     this.password.set(DEMO_PASSWORD);
-    this.error.set(null);
-    this.submitted.set(false);
+    this.submit();
   }
 }
 

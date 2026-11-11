@@ -105,15 +105,15 @@
       <p>Passwort für alle Konten: <code>{{ demoPassword }}</code></p>
       <ul>
         <li>
-          <button type="button" (click)="useDemoAccount('felix.brandt@firma.de')">felix.brandt&#64;firma.de</button>
+          <button type="button" [disabled]="busy()" (click)="useDemoAccount('felix.brandt@firma.de')">felix.brandt&#64;firma.de</button>
           <span>Administrator</span>
         </li>
         <li>
-          <button type="button" (click)="useDemoAccount('harald.weizmann@firma.de')">harald.weizmann&#64;firma.de</button>
+          <button type="button" [disabled]="busy()" (click)="useDemoAccount('harald.weizmann@firma.de')">harald.weizmann&#64;firma.de</button>
           <span>Nutzer</span>
         </li>
         <li>
-          <button type="button" (click)="useDemoAccount('jonas.pfeiffer@firma.de')">jonas.pfeiffer&#64;firma.de</button>
+          <button type="button" [disabled]="busy()" (click)="useDemoAccount('jonas.pfeiffer@firma.de')">jonas.pfeiffer&#64;firma.de</button>
           <span>gesperrtes Konto</span>
         </li>
       </ul>
