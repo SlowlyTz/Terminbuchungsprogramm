@@ -44,8 +44,10 @@
         <!-- Buttons must not also open the details behind them. -->
         <td class="actions" (click)="$event.stopPropagation()">
           @if (!isPast(b)) {
-            <p-button label="Bearbeiten" icon="pi pi-pencil" severity="secondary" [outlined]="true" size="small" (onClick)="editing.set(b)" />
-            <p-button label="Stornieren" icon="pi pi-trash" severity="danger" [outlined]="true" size="small" (onClick)="toCancel.set(b)" />
+            <div class="actions__buttons">
+              <p-button label="Bearbeiten" icon="pi pi-pencil" severity="secondary" [outlined]="true" size="small" (onClick)="editing.set(b)" />
+              <p-button label="Stornieren" icon="pi pi-trash" severity="danger" [outlined]="true" size="small" (onClick)="toCancel.set(b)" />
+            </div>
           }
         </td>
       </tr>
